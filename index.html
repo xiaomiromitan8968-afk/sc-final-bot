@@ -3,39 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sening Sehrli Olami 💙</title>
+    <title>Sening Sehrli Dunyong 💙</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow-x: hidden; font-family: sans-serif; color: white; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle, #001d3d 0%, #000000 100%); 
+            overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; 
+        }
         
         /* VIDEO FON */
         #bg-video {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover; z-index: -2; filter: brightness(0.4);
+            object-fit: cover; z-index: -2; filter: brightness(0.5);
         }
 
-        /* 3D CANVAS */
-        #canvas3d { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
+        /* 3D ZARRALAR (CANVAS) */
+        #canvas3d { position: fixed; top: 0; left: 0; z-index: -1; }
 
-        .content { position: relative; z-index: 10; text-align: center; }
-        section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        .container {
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+            text-align: center; background: rgba(0,0,0,0.2);
+        }
 
         .card {
-            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px);
-            border: 1px solid #00f2ff; border-radius: 20px; padding: 30px;
-            max-width: 400px; box-shadow: 0 0 20px #008cff;
+            background: rgba(0, 140, 255, 0.1); backdrop-filter: blur(15px);
+            border: 2px solid #00f2ff; border-radius: 30px; padding: 40px;
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.3); animation: float 3s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        h1 { color: #00f2ff; text-shadow: 0 0 15px #008cff; margin-bottom: 20px; }
+        
+        .rose { position: relative; width: 150px; height: 150px; margin: 20px auto; }
+        .petal { 
+            position: absolute; width: 45px; height: 75px; background: #008cff; 
+            border-radius: 50% 50% 10% 10%; left: 52px; transform-origin: bottom center; 
+            cursor: pointer; border: 1px solid #00f2ff; transition: 0.5s;
         }
 
         .btn {
-            background: #008cff; color: white; border: none; padding: 15px 30px;
-            border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 20px;
-        }
-
-        /* ATIRGUL */
-        .rose { position: relative; width: 150px; height: 150px; margin: 20px auto; }
-        .petal { 
-            position: absolute; width: 40px; height: 60px; background: #008cff; 
-            border-radius: 50% 50% 10% 10%; left: 55px; transform-origin: bottom center; 
-            cursor: pointer; border: 1px solid #00f2ff; transition: 0.5s;
+            background: linear-gradient(45deg, #008cff, #00f2ff);
+            color: white; border: none; padding: 12px 35px;
+            border-radius: 50px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 15px #008cff; transition: 0.3s;
         }
     </style>
 </head>
@@ -48,66 +62,62 @@
     <canvas id="canvas3d"></canvas>
     <audio id="bgMusic" loop><source src="music.mp3" type="audio/mpeg"></audio>
 
-    <div class="content">
-        <section>
-            <div class="card">
-                <h1 style="color: #00f2ff;">Happy Birthday! 💙</h1>
-                <p>Ushbu mo'jizaviy dunyoga kirish uchun tugmani bosing.</p>
-                <button class="btn" onclick="start()">Kirish ✨</button>
-            </div>
-        </section>
-
-        <section id="game" style="display:none;">
-            <div class="card">
-                <h2>Ko'k atirgul siri</h2>
-                <div class="rose" id="rose"></div>
-                <p id="hint">Barglarni uzing...</p>
-            </div>
-        </section>
+    <div class="container">
+        <div class="card" id="mainCard">
+            <h1>Sening Dunyong 💙</h1>
+            <div class="rose" id="rose"></div>
+            <p id="status">Barglarni uzing...</p>
+            <button class="btn" onclick="playAll()" id="startBtn" style="display:none;">Musiqani yoqish 🎵</button>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // 3D EFFECT
+        // --- 3D STARS ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({canvas: document.getElementById('canvas3d'), alpha: true});
         renderer.setSize(window.innerWidth, window.innerHeight);
 
-        const geo = new THREE.BufferGeometry();
-        const pts = [];
-        for(let i=0; i<3000; i++) pts.push((Math.random()-0.5)*1000, (Math.random()-0.5)*1000, (Math.random()-0.5)*1000);
-        geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-        const star = new THREE.Points(geo, new THREE.PointsMaterial({color: 0x00f2ff, size: 2}));
-        scene.add(star);
-        camera.position.z = 5;
+        const starGeo = new THREE.BufferGeometry();
+        const starPos = [];
+        for(let i=0; i<4000; i++) {
+            starPos.push((Math.random()-0.5)*1500, (Math.random()-0.5)*1500, (Math.random()-0.5)*1500);
+        }
+        starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+        const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0x00f2ff, size: 2}));
+        scene.add(stars);
+        camera.position.z = 1;
 
-        function animate() {
-            requestAnimationFrame(animate);
-            star.rotation.y += 0.001;
+        function anim() {
+            requestAnimationFrame(anim);
+            stars.rotation.y += 0.0008;
             renderer.render(scene, camera);
         }
-        animate();
+        anim();
 
-        function start() {
-            document.getElementById('bgMusic').play();
-            document.getElementById('game').style.display = 'flex';
-            document.getElementById('game').scrollIntoView({behavior: 'smooth'});
-            createPetals();
+        // --- GAME LOGIC ---
+        let petals = 6;
+        const rose = document.getElementById('rose');
+        for(let i=0; i<6; i++) {
+            const p = document.createElement('div');
+            p.className = 'petal';
+            p.style.transform = `rotate(${i*60}deg)`;
+            p.onclick = function() {
+                this.style.opacity = '0';
+                this.style.transform += ' scale(0) translateY(-100px)';
+                petals--;
+                if(petals === 0) {
+                    document.getElementById('status').innerText = "Tabriklayman! 🎂";
+                    document.getElementById('startBtn').style.display = 'inline-block';
+                }
+            };
+            rose.appendChild(p);
         }
 
-        function createPetals() {
-            const r = document.getElementById('rose');
-            for(let i=0; i<6; i++) {
-                const p = document.createElement('div');
-                p.className = 'petal';
-                p.style.transform = `rotate(${i*60}deg)`;
-                p.onclick = function() { 
-                    this.style.opacity = '0'; 
-                    this.style.transform += ' scale(0)';
-                };
-                r.appendChild(p);
-            }
+        function playAll() {
+            document.getElementById('bgMusic').play();
+            alert("Seni yaxshi ko'raman! 💙");
         }
     </script>
 </body>

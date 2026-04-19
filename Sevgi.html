@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sening kuning bilan, Azizam!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink: #ff4d94;
+            --dark: #1a000d;
+            --soft-pink: #ffb3d1;
+        }
+        body {
+            margin: 0; background: var(--dark);
+            font-family: 'Montserrat', sans-serif;
+            color: white; overflow-x: hidden;
+        }
+        
+        /* Bosh sahifa */
+        .hero {
+            height: 100vh;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            text-align: center; position: relative;
+        }
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 5rem; color: var(--pink);
+            text-shadow: 0 0 20px var(--pink);
+            margin: 0;
+        }
+
+        /* Timeline stili */
+        .timeline {
+            position: relative; max-width: 800px;
+            margin: 50px auto; padding: 20px;
+        }
+        .timeline::after {
+            content: ''; position: absolute;
+            width: 2px; background: var(--pink);
+            top: 0; bottom: 0; left: 50%;
+        }
+        .container {
+            padding: 10px 40px; position: relative;
+            width: 50%; box-sizing: border-box;
+            opacity: 0; transform: translateY(50px);
+            transition: 1s all ease;
+        }
+        .container.show { opacity: 1; transform: translateY(0); }
+        .left { left: 0; text-align: right; }
+        .right { left: 50%; text-align: left; }
+        
+        .content {
+            padding: 20px; background: rgba(255, 77, 148, 0.1);
+            border: 1px solid var(--pink);
+            border-radius: 20px; position: relative;
+        }
+        .content img {
+            width: 100%; border-radius: 15px;
+            margin-bottom: 10px; border: 2px solid var(--pink);
+        }
+        .content h3 { color: var(--pink); margin: 0; }
+        .content p { font-size: 0.9rem; color: var(--soft-pink); }
+
+        @media screen and (max-width: 600px) {
+            .timeline::after { left: 31px; }
+            .container { width: 100%; padding-left: 70px; padding-right: 25px; text-align: left; }
+            .right { left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <section class="hero">
+        <h1>Happy Birthday!</h1>
+        <p>Sening tabassuming - mening dunyoim...</p>
+        <div style="margin-top: 50px; font-size: 2rem; animation: bounce 2s infinite;">👇</div>
+    </section>
+
+    <div class="timeline">
+        
+        <div class="container left animate-box">
+            <div class="content">
+                <img src="rasm1.jpg" alt="Xotira 1">
+                <h3>Ilk uchrashuv</h3>
+                <p>O'sha kundan boshlab hayotim butunlay o'zgardi...</p>
+            </div>
+        </div>
+
+        <div class="container right animate-box">
+            <div class="content">
+                <img src="rasm2.jpg" alt="Xotira 2">
+                <h3>Eng shirin lahzalar</h3>
+                <p>Sening kulgung - dunyodagi eng go'zal musiqa.</p>
+            </div>
+        </div>
+
+        <div class="container left animate-box">
+            <div class="content">
+                <img src="rasm3.jpg" alt="Xotira 3">
+                <h3>Har doim birga</h3>
+                <p>Qayerda bo'lmaylik, yuragim doim sen bilan.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Scroll animatsiyasi
+        window.addEventListener('scroll', checkBoxes);
+        function checkBoxes() {
+            const boxes = document.querySelectorAll('.animate-box');
+            const triggerBottom = window.innerHeight / 5 * 4;
+            boxes.forEach(box => {
+                const boxTop = box.getBoundingClientRect().top;
+                if(boxTop < triggerBottom) {
+                    box.classList.add('show');
+                }
+            });
+        }
+        window.onload = checkBoxes;
+    </script>
+</body>
+</html>

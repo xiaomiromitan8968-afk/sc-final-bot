@@ -4,177 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sening Sehrli Olami 💙</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;600&display=swap" rel="stylesheet">
     <style>
-        :root { --blue: #008cff; --cyan: #00f2ff; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow-x: hidden; font-family: 'Montserrat', sans-serif; color: white; }
-
-        /* 1. TO'LIQ EKRANLI VIDEO FON */
-        #video-background {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
-            height: auto;
-            z-index: -3; /* Eng pastki qavat */
-            transform: translate(-50%, -50%);
-            filter: brightness(0.4) blur(1px); /* Video ustidagi elementlar ko'rinishi uchun biroz xiralashtiramiz */
-            object-fit: cover;
-        }
-
-        /* 2. 3D ZARRALAR QAVATI (Video ustida) */
-        #canvas3d {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2; /* Videodan bitta yuqorida */
-            pointer-events: none; /* Tevshishlar pastki qavatga o'tishi uchun */
-        }
-
-        /* CONTENT */
-        .content { position: relative; z-index: 10; width: 100%; }
-        section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
-
-        .glass-card {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            border-radius: 30px;
-            padding: 40px;
-            box-shadow: 0 0 30px rgba(0, 140, 255, 0.2);
-            max-width: 500px;
-        }
-
-        h1 { font-family: 'Dancing Script', cursive; font-size: 3.5rem; color: var(--cyan); text-shadow: 0 0 20px var(--blue); margin: 0; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow-x: hidden; font-family: sans-serif; color: white; }
         
-        .btn-glow {
-            margin-top: 25px; padding: 15px 40px;
-            background: linear-gradient(45deg, var(--blue), var(--cyan));
-            border: none; border-radius: 50px; color: white;
-            font-weight: bold; cursor: pointer; box-shadow: 0 0 20px var(--blue);
-            transition: 0.3s; font-size: 1.1rem;
+        /* VIDEO FON */
+        #bg-video {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: -2; filter: brightness(0.4);
         }
 
-        /* KO'K ATIRGUL O'YINI */
-        .rose-box { position: relative; width: 180px; height: 180px; margin: 30px 0; }
+        /* 3D CANVAS */
+        #canvas3d { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
+
+        .content { position: relative; z-index: 10; text-align: center; }
+        section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+
+        .card {
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px);
+            border: 1px solid #00f2ff; border-radius: 20px; padding: 30px;
+            max-width: 400px; box-shadow: 0 0 20px #008cff;
+        }
+
+        .btn {
+            background: #008cff; color: white; border: none; padding: 15px 30px;
+            border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 20px;
+        }
+
+        /* ATIRGUL */
+        .rose { position: relative; width: 150px; height: 150px; margin: 20px auto; }
         .petal { 
-            position: absolute; width: 40px; height: 70px; background: var(--blue); 
-            border-radius: 50% 50% 10% 10%; left: 70px; transform-origin: bottom center; 
-            cursor: pointer; border: 1px solid var(--cyan); transition: 0.5s ease-out;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            position: absolute; width: 40px; height: 60px; background: #008cff; 
+            border-radius: 50% 50% 10% 10%; left: 55px; transform-origin: bottom center; 
+            cursor: pointer; border: 1px solid #00f2ff; transition: 0.5s;
         }
     </style>
 </head>
 <body>
 
-    <video autoplay muted loop playsinline id="video-background">
+    <video autoplay muted loop playsinline id="bg-video">
         <source src="background.mp4" type="video/mp4">
     </video>
 
     <canvas id="canvas3d"></canvas>
-
     <audio id="bgMusic" loop><source src="music.mp3" type="audio/mpeg"></audio>
 
     <div class="content">
         <section>
-            <div class="glass-card">
-                <h1>Tug'ilgan kuning bilan! 💙</h1>
-                <p>Sening sharafingga yaratilgan bu dunyo senga yoqadi degan umiddaman.</p>
-                <button class="btn-glow" onclick="startJourney()">Kirish ✨</button>
+            <div class="card">
+                <h1 style="color: #00f2ff;">Happy Birthday! 💙</h1>
+                <p>Ushbu mo'jizaviy dunyoga kirish uchun tugmani bosing.</p>
+                <button class="btn" onclick="start()">Kirish ✨</button>
             </div>
         </section>
 
-        <section id="game">
-            <div class="glass-card">
-                <h2 style="color: var(--cyan);">Ko'k atirgul siri</h2>
-                <div class="rose-box" id="rose"></div>
-                <p id="hint">Barglarni bitta-bitta uzing...</p>
-            </div>
-        </section>
-
-        <section id="secret">
-            <div class="glass-card">
-                <h3>Sizni har doim nima deb chaqiraman? 🔒</h3>
-                <input type="text" id="pass" style="background:transparent; border:none; border-bottom:2px solid var(--cyan); color:white; text-align:center; padding:10px; font-size:1.2rem; outline:none; width:80%;">
-                <br>
-                <button class="btn-glow" onclick="checkPass()">Ochish</button>
-                <div id="final" style="display:none; margin-top:30px;">
-                    <h1 style="font-size: 2rem;">Seni cheksiz sevaman! 💍</h1>
-                </div>
+        <section id="game" style="display:none;">
+            <div class="card">
+                <h2>Ko'k atirgul siri</h2>
+                <div class="rose" id="rose"></div>
+                <p id="hint">Barglarni uzing...</p>
             </div>
         </section>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // --- 3D PARTICLE SYSTEM ---
+        // 3D EFFECT
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas3d'), alpha: true });
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({canvas: document.getElementById('canvas3d'), alpha: true});
         renderer.setSize(window.innerWidth, window.innerHeight);
 
         const geo = new THREE.BufferGeometry();
-        const points = [];
-        for(let i=0; i<6000; i++) {
-            points.push(THREE.MathUtils.randFloatSpread(1000), THREE.MathUtils.randFloatSpread(1000), THREE.MathUtils.randFloatSpread(1000));
-        }
-        geo.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
-        const mat = new THREE.PointsMaterial({ color: 0x00f2ff, size: 2, transparent: true, opacity: 0.6 });
-        const starField = new THREE.Points(geo, mat);
-        scene.add(starField);
+        const pts = [];
+        for(let i=0; i<3000; i++) pts.push((Math.random()-0.5)*1000, (Math.random()-0.5)*1000, (Math.random()-0.5)*1000);
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+        const star = new THREE.Points(geo, new THREE.PointsMaterial({color: 0x00f2ff, size: 2}));
+        scene.add(star);
         camera.position.z = 5;
 
         function animate() {
             requestAnimationFrame(animate);
-            starField.rotation.y += 0.0005;
+            star.rotation.y += 0.001;
             renderer.render(scene, camera);
         }
         animate();
 
-        // --- LOGIKA ---
-        function startJourney() {
+        function start() {
             document.getElementById('bgMusic').play();
-            document.getElementById('game').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('game').style.display = 'flex';
+            document.getElementById('game').scrollIntoView({behavior: 'smooth'});
+            createPetals();
         }
 
-        let petals = 6;
-        const rose = document.getElementById('rose');
-        for(let i=0; i<petals; i++) {
-            const p = document.createElement('div');
-            p.className = 'petal';
-            p.style.transform = `rotate(${i * 60}deg)`;
-            p.onclick = function() {
-                this.style.opacity = '0';
-                this.style.transform += ' scale(0) translateY(-100px)';
-                petals--;
-                if(petals === 0) {
-                    document.getElementById('hint').innerText = "Mo'jiza topildi! ✨";
-                    setTimeout(() => document.getElementById('secret').scrollIntoView({ behavior: 'smooth' }), 1000);
-                }
-            };
-            rose.appendChild(p);
-        }
-
-        function checkPass() {
-            const val = document.getElementById('pass').value.toLowerCase().trim();
-            if(val === "asalim" || val === "jonim") { // JAVOBNI SHU YERGA YOZING
-                document.getElementById('final').style.display = 'block';
-                mat.color.set(0xffffff);
-                alert("To'g'ri! 💙");
-            } else {
-                alert("Xato! 🤨");
+        function createPetals() {
+            const r = document.getElementById('rose');
+            for(let i=0; i<6; i++) {
+                const p = document.createElement('div');
+                p.className = 'petal';
+                p.style.transform = `rotate(${i*60}deg)`;
+                p.onclick = function() { 
+                    this.style.opacity = '0'; 
+                    this.style.transform += ' scale(0)';
+                };
+                r.appendChild(p);
             }
         }
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
     </script>
 </body>
 </html>

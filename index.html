@@ -2,214 +2,175 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sening Sehrli Dunyong 💙</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sening Ko'k Olami 💙</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;600&display=swap" rel="stylesheet">
     <style>
-        :root { --cyan: #00f2ff; --blue: #008cff; --dark: #00050a; }
-        body, html { margin: 0; padding: 0; background: var(--dark); overflow-x: hidden; font-family: 'Montserrat', sans-serif; color: white; height: 100%; width: 100%; }
+        :root { --blue: #008cff; --cyan: #00f2ff; --dark: #000205; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--dark); overflow-x: hidden; font-family: 'Montserrat', sans-serif; color: white; }
 
-        /* 3D Canvas va Fon stili */
-        #canvas3d { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-        
-        .section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; position: relative; }
+        /* 3D WEBGL CANVAS */
+        #webgl-canvas { position: fixed; top: 0; left: 0; outline: none; z-index: -1; }
 
-        /* Matnlar stili */
-        h1 { font-family: 'Dancing Script', cursive; font-size: 3.5rem; color: var(--cyan); text-shadow: 0 0 25px var(--blue); margin-top: 0; }
-        .love-text { font-size: 1.1rem; line-height: 1.6; color: #e0faff; max-width: 300px; opacity: 0; transform: translateY(20px); transition: 1s ease-out; margin: 10px 0; }
-        .show { opacity: 1; transform: translateY(0); }
+        /* CONTENT OVERLAY */
+        .content { position: relative; z-index: 10; width: 100%; }
+        section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box; }
 
-        /* Rasmlar (3D effekt bilan) */
-        .photo-frame {
-            width: 250px; border: 2px solid var(--cyan); border-radius: 15px;
-            box-shadow: 0 0 30px var(--blue); margin: 30px 0;
-            opacity: 0; transform: perspective(1000px) rotateY(10deg);
-            transition: 1s ease-out;
+        h1 { font-family: 'Dancing Script', cursive; font-size: clamp(2.5rem, 8vw, 4.5rem); color: var(--cyan); text-shadow: 0 0 20px var(--blue); margin: 0; }
+        p { font-size: 1.1rem; color: #a0d8ff; max-width: 400px; margin: 20px 0; }
+
+        /* GLASSMORPHISM CARD */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            border-radius: 25px; padding: 35px;
+            box-shadow: 0 0 40px rgba(0, 140, 255, 0.2);
+            opacity: 0; transform: translateY(30px); transition: 1.5s ease-out;
+        }
+        .glass-card.visible { opacity: 1; transform: translateY(0); }
+
+        /* INTERACTIVE BUTTON */
+        .btn-glow {
+            padding: 15px 45px; background: transparent; border: 2px solid var(--cyan);
+            border-radius: 50px; color: var(--cyan); font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 15px var(--blue); transition: 0.4s; font-size: 1rem;
+        }
+        .btn-glow:hover { background: var(--blue); color: white; box-shadow: 0 0 30px var(--cyan); }
+
+        /* SECRET INPUT */
+        .secret-input {
+            background: transparent; border: none; border-bottom: 2px solid var(--cyan);
+            color: white; padding: 10px; text-align: center; font-size: 1.2rem;
+            outline: none; margin-top: 20px; width: 80%;
         }
 
-        /* Atirgul barglari o'yini stili */
-        .rose-game { width: 180px; height: 180px; position: relative; margin: 30px 0; }
-        .petal { position: absolute; width: 38px; height: 68px; background: var(--blue); border-radius: 50% 50% 10% 10%; left: 71px; transform-origin: bottom center; cursor: pointer; border: 1px solid var(--cyan); transition: 0.5s; box-shadow: inset 0 0 10px rgba(0,0,0,0.4); }
-
-        /* Maxfiy quti stili */
-        .secret-box { background: rgba(0, 140, 255, 0.1); backdrop-filter: blur(10px); padding: 35px; border-radius: 25px; border: 1px solid var(--cyan); display: none; box-shadow: 0 0 30px var(--blue); }
-        .secret-input { background: transparent; border: 1px solid var(--cyan); color: white; padding: 12px; border-radius: 10px; text-align: center; margin: 15px 0; outline: none; font-size: 1rem; width: 100%; box-sizing: border-box; }
-
-        .btn { padding: 14px 35px; background: linear-gradient(45deg, var(--blue), var(--cyan)); border: none; border-radius: 50px; color: white; cursor: pointer; box-shadow: 0 0 20px var(--blue); font-weight: bold; margin-top: 20px; font-size: 1rem; transition: 0.3s; }
-        .btn:active { transform: scale(0.95); }
+        /* 3D ROSE GAME */
+        .rose-box { position: relative; width: 200px; height: 200px; margin: 20px 0; }
+        .petal { 
+            position: absolute; width: 45px; height: 75px; background: var(--blue); 
+            border-radius: 50% 50% 10% 10%; left: 77px; transform-origin: bottom center; 
+            cursor: pointer; border: 1px solid var(--cyan); transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
     </style>
 </head>
 <body>
 
-    <canvas id="canvas3d"></canvas>
+    <canvas id="webgl-canvas"></canvas>
+    
     <audio id="bgMusic" loop><source src="music.mp3" type="audio/mpeg"></audio>
 
-    <section class="section" id="hero-section">
-        <div style="font-size: 3rem; margin-bottom: 10px;">🌌</div>
-        <h1>Sening Dunyong... 💙</h1>
-        <p class="love-text show">Bu yerda faqat sen, men va ko'k atirgullar...</p>
-        <button class="btn" onclick="startStory()">Kirish</button>
-    </section>
+    <div class="content">
+        <section>
+            <div class="glass-card visible">
+                <h1>Happy Birthday! 💙</h1>
+                <p>Sening sharafingga yaratilgan virtual olamga xush kelibsan.</p>
+                <button class="btn-glow" onclick="startJourney()">Sayohatni Boshlash</button>
+            </div>
+        </section>
 
-    <section class="section hidden-sec" id="story-section">
-        <div class="love-text animate">Sen mening hayotimdagi eng go'zal mo'jizasan.</div>
-        <img src="rasm1.jpg" class="photo-frame animate">
-        <div class="love-text animate">Sening kulgung mening eng sevimli musiqam.</div>
-        <img src="rasm2.jpg" class="photo-frame animate">
-    </section>
+        <section id="gallery">
+            <div class="glass-card scroll-reveal">
+                <img src="rasm1.jpg" style="width: 100%; border-radius: 15px; margin-bottom: 15px;">
+                <p>"Sen bu olamning eng porloq yulduzisan..."</p>
+            </div>
+        </section>
 
-    <section class="section hidden-sec" id="game-section">
-        <h2 style="color: var(--cyan); margin-bottom: 10px;">Ko'k atirgul siri</h2>
-        <div class="rose-game" id="rose"></div>
-        <p id="game-hint" style="font-size: 0.9rem; color: var(--soft-pink);">Barglarni bitta-bitta bosing...</p>
-    </section>
+        <section>
+            <div class="glass-card scroll-reveal">
+                <h3>Ko'k Atirgul Siri 🌹</h3>
+                <div class="rose-box" id="roseContainer"></div>
+                <p id="gameStatus">Barglarni bitta-bitta uzing...</p>
+            </div>
+        </section>
 
-    <section class="section hidden-sec" id="secret-section">
-        <div class="secret-box" id="s-box" style="display: block;">
-            <h3>Maxfiy so'zni kiriting🔒</h3>
-            <p style="font-size: 0.8rem; margin: 10px 0;">(Sizni har doim nima deb chaqiraman?)</p>
-            <input type="text" id="pass" class="secret-input" placeholder="...">
-            <br>
-            <button class="btn" onclick="checkPass()">Ochish 🔓</button>
-        </div>
-        <div id="final-msg" style="display: none;">
-            <div style="font-size: 4rem; margin-bottom: 10px;">💙💍💙</div>
-            <h1 style="font-size: 2.5rem; text-shadow: 0 0 30px white;">Seni cheksiz sevaman!</h1>
-            <p style="font-size: 1.2rem; color: var(--cyan);">Sen mening birinchi va oxirgi mo'jizamsan. Tug'ilgan kuning bilan, yagonam!</p>
-        </div>
-    </section>
+        <section id="lock">
+            <div class="glass-card scroll-reveal">
+                <h3>Faqat biz biladigan so'z...</h3>
+                <input type="text" id="passCode" class="secret-input" placeholder="Parolni yozing...">
+                <br>
+                <button class="btn-glow" style="margin-top: 20px;" onclick="unlockSecret()">Ochish 🔒</button>
+                <div id="finalSurprise" style="display:none; margin-top: 30px;">
+                    <h2 style="color: var(--cyan);">Seni Cheksiz Sevaman! 💍</h2>
+                    <p>Sen mening mo'jizamsan.</p>
+                </div>
+            </div>
+        </section>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // --- YANGI VA MUSTAHKAM THREE.JS SOZLAMALARI ---
+        // --- 1. 3D OLAMNI QURISH (THREE.JS) ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        
-        // Alpha true fonni shaffof qiladi
-        const renderer = new THREE.WebGLRenderer({canvas: document.getElementById('canvas3d'), alpha: true, antialias: true});
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('webgl-canvas'), antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
 
-        // ATIRGULLAR DALASI O'RNIGA YANADA ZICH YULDUZLAR VA ATIRGUL SHAKLLARI
-        const starGeo = new THREE.BufferGeometry();
-        const starCoords = [];
-        const starColors = [];
-        const baseColor = new THREE.Color(0x00f2ff);
+        // Minglab "ko'k atirgul" zarralari
+        const particlesGeo = new THREE.BufferGeometry();
+        const count = 10000;
+        const pos = new Float32Array(count * 3);
+        for(let i=0; i<count*3; i++) pos[i] = (Math.random() - 0.5) * 1000;
+        particlesGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
         
-        // Atirgullar dalasi kabi zich va chiroyli koinot (15000 ta nuqta)
-        for(let i=0; i<15000; i++) {
-            // Nuqtalarni bir xilda fazoga tarqatish
-            starCoords.push(THREE.MathUtils.randFloatSpread(1500), THREE.MathUtils.randFloatSpread(1500), THREE.MathUtils.randFloatSpread(1500));
-            
-            // Nuqtalar rangini ko'k-moviy oraliqda biroz farqli qilish
-            const tempColor = baseColor.clone();
-            tempColor.lerp(new THREE.Color(0x008cff), Math.random() * 0.5);
-            starColors.push(tempColor.r, tempColor.g, tempColor.b);
-        }
-        
-        starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starCoords, 3));
-        starGeo.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
-        
-        // Nuqtalar materiali
-        const starMat = new THREE.PointsMaterial({
-            size: 2, 
-            vertexColors: true, // Nuqta ranglarini BufferAttribute-dan oladi
-            transparent: true, 
-            opacity: 0.9,
-            blending: THREE.AdditiveBlending // Nuqtalarni bir-biriga qo'shib, yanada yorqinroq ko'rsatadi
-        });
-        const stars = new THREE.Points(starGeo, starMat);
-        scene.add(stars);
+        const particlesMat = new THREE.PointsMaterial({ size: 1.5, color: 0x00f2ff, transparent: true, opacity: 0.8 });
+        const particleSystem = new THREE.Points(particlesGeo, particlesMat);
+        scene.add(particleSystem);
+        camera.position.z = 50;
 
-        // Chiroq qo'shish (ixtiyoriy, materialga bog'liq)
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(1, 1, 1).normalize();
-        scene.add(light);
-
-        camera.position.z = 2; // Fazoni yanada zichroq ko'rish uchun kamerani yaqinlashtirish
-
-        // --- ANIMATSIYA LOOP ---
-        function animate() {
-            requestAnimationFrame(animate);
-            // Fazoning sekin va silliq aylanishi
-            stars.rotation.y += 0.0003;
-            stars.rotation.x += 0.0001;
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            particleSystem.rotation.y += 0.001;
+            particleSystem.rotation.x += 0.0005;
             renderer.render(scene, camera);
         }
-        animate();
+        animate3D();
 
-        // --- INTERAKTIV LOGIKA ---
-        function startStory() {
-            // Musiqani boshlash (foydalanuvchi bosganda ruxsat beriladi)
-            const music = document.getElementById('bgMusic');
-            music.volume = 0.5;
-            music.play().catch(e => console.log("Musiqa ijro etilmadi:", e));
-
-            // Silliq scroll (foydalanish qulayligi uchun)
-            document.getElementById('story-section').style.display = 'flex';
-            document.getElementById('story-section').scrollIntoView({behavior: 'smooth'});
-            activateAnimations();
+        // --- 2. INTERAKTIV FUNKSIYALAR ---
+        function startJourney() {
+            document.getElementById('bgMusic').play();
+            document.querySelector('#gallery').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function activateAnimations() {
-            // Skroll qilganda elementlar silliq chiqishi uchun IntersectionObserver
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('show'); } });
-            });
-            document.querySelectorAll('.animate').forEach(el => observer.observe(el));
-            
-            // Atirgul o'yinini va maxfiy sectionni yaratish (interaktiv ssenariy)
-            createRose();
-            document.getElementById('game-section').style.display = 'flex';
+        // Atirgul barglarini yaratish
+        let petalsLeft = 8;
+        const roseBox = document.getElementById('roseContainer');
+        for(let i=0; i<8; i++) {
+            const p = document.createElement('div');
+            p.className = 'petal';
+            p.style.transform = `rotate(${i * 45}deg)`;
+            p.onclick = function() {
+                this.style.opacity = '0';
+                this.style.transform += ' translateY(-100px) scale(0)';
+                petalsLeft--;
+                if(petalsLeft === 0) {
+                    document.getElementById('gameStatus').innerText = "Siz mo'jizani topdingiz! ✨";
+                    document.getElementById('lock').scrollIntoView({ behavior: 'smooth' });
+                }
+            };
+            roseBox.appendChild(p);
         }
 
-        let petalsLeft = 6;
-        function createRose() {
-            const rose = document.getElementById('rose');
-            rose.innerHTML = ''; // Atirgulni tozalash (agar kerak bo'lsa)
-            for(let i=0; i<6; i++) {
-                const p = document.createElement('div');
-                p.className = 'petal';
-                p.style.transform = `rotate(${i * 60}deg)`;
-                p.onclick = function() {
-                    // Barglarni silliq yo'qotish
-                    this.style.opacity = '0';
-                    this.style.transform += ' scale(0) translateY(-50px)';
-                    petalsLeft--;
-                    
-                    // Xotiralar matnlarini yangilash (ixtiyoriy)
-                    if(petalsLeft === 3) document.getElementById('game-hint').innerText = "Yana ozgina qoldi 💙";
-                    
-                    if(petalsLeft === 0) {
-                        document.getElementById('game-hint').innerText = "Ajoyib! ✨";
-                        document.getElementById('secret-section').style.display = 'flex';
-                        document.getElementById('secret-section').scrollIntoView({behavior: 'smooth'});
-                    }
-                };
-                rose.appendChild(p);
-            }
-        }
-
-        function checkPass() {
-            const val = document.getElementById('pass').value.toLowerCase().trim();
-            // --- JAVOBNI SHU YERGA YOZING ---
-            if(val === "asalim" || val === "jonim") {
-                document.getElementById('s-box').style.display = 'none';
-                document.getElementById('final-msg').style.display = 'block';
-                // 3D effektni kuchaytirish (Koinot yanada yorqinlashadi)
-                starMat.color.set(0xffffff);
-                starMat.size = 3;
-                starMat.opacity = 1;
+        // Maxfiy so'zni tekshirish
+        function unlockSecret() {
+            const code = document.getElementById('passCode').value.toLowerCase();
+            if(code === "asalim" || code === "jonim") { // SHU YERGA PAROLNI YOZING
+                document.getElementById('finalSurprise').style.display = 'block';
+                particlesMat.color.set(0xffffff); // Fazo rangini oqqa o'zgartirish
+                alert("Baxtli bo'ling! ❤️");
             } else {
-                alert("Yana bir bor o'ylab ko'ring 🤨. Sening eng shirin ismingni yoz.");
+                alert("Xato! Sening eng shirin ismingni yoz 🤨");
             }
         }
 
-        // Ekran o'zgarganda 3D render-ni moslashtirish
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        // Scroll animatsiyasi
+        window.addEventListener('scroll', () => {
+            document.querySelectorAll('.scroll-reveal').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if(rect.top < window.innerHeight * 0.8) el.classList.add('visible');
+            });
+            // Kamera harakati scrollga qarab
+            camera.position.z = 50 - window.scrollY * 0.05;
         });
     </script>
 </body>

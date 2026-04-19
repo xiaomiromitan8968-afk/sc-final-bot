@@ -3,127 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sening kuning bilan, Azizam!</title>
+    <title>Sening mo'jizang 💙</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;600&display=swap" rel="stylesheet">
     <style>
-        :root { --pink: #ff4d94; --dark: #12000a; --soft-pink: #ffb3d1; }
-        body { margin: 0; background: var(--dark); font-family: 'Montserrat', sans-serif; color: white; overflow-x: hidden; scroll-behavior: smooth; }
+        :root { 
+            --blue: #008cff; 
+            --dark-blue: #001220; 
+            --cyan: #00f2ff; 
+            --glow: 0 0 20px rgba(0, 140, 255, 0.6);
+        }
+        body { margin: 0; background: var(--dark-blue); font-family: 'Montserrat', sans-serif; color: white; overflow-x: hidden; scroll-behavior: smooth; }
         
-        /* Bosh sahifa */
+        #canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+
         .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
-        h1 { font-family: 'Dancing Script', cursive; font-size: 3.5rem; color: var(--pink); text-shadow: 0 0 15px var(--pink); margin-bottom: 10px; }
-        
-        .counter-box { margin: 20px 0; padding: 15px; background: rgba(255, 77, 148, 0.1); border-radius: 20px; border: 1px solid rgba(255, 77, 148, 0.3); }
-        #love-counter { font-size: 1.1rem; color: var(--soft-pink); font-weight: 600; }
+        h1 { font-family: 'Dancing Script', cursive; font-size: 3.5rem; color: var(--cyan); text-shadow: var(--glow); margin: 0; }
 
-        .start-btn { padding: 15px 40px; background: var(--pink); border: none; border-radius: 50px; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px var(--pink); transition: 0.3s; }
+        .counter-box { margin: 20px 0; padding: 15px; background: rgba(0, 140, 255, 0.1); border-radius: 20px; border: 1px solid rgba(0, 242, 255, 0.3); backdrop-filter: blur(5px); }
+        #love-counter { font-size: 1.1rem; color: var(--cyan); font-weight: 600; }
 
-        /* Romashka o'yini */
-        .game-section { padding: 50px 20px; text-align: center; display: none; }
-        .flower { position: relative; width: 200px; height: 200px; margin: 0 auto; }
-        .petal { position: absolute; width: 40px; height: 100px; background: white; border-radius: 50%; left: 80px; transform-origin: bottom center; cursor: pointer; transition: 0.5s; border: 1px solid #ddd; }
-        .flower-center { position: absolute; width: 60px; height: 60px; background: #ffd700; border-radius: 50%; top: 70px; left: 70px; z-index: 10; box-shadow: 0 0 10px orange; }
+        .start-btn { padding: 15px 40px; background: var(--blue); border: none; border-radius: 50px; color: white; font-weight: bold; cursor: pointer; box-shadow: var(--glow); transition: 0.3s; z-index: 100; }
+        .start-btn:active { transform: scale(0.95); }
 
-        /* Xazina qutisi */
-        .treasure-section { padding: 50px 20px; text-align: center; display: none; }
-        .lock-icon { font-size: 5rem; cursor: pointer; animation: bounce 2s infinite; }
-        .secret-input { padding: 12px; border-radius: 10px; border: 1px solid var(--pink); background: transparent; color: white; margin: 15px 0; text-align: center; }
+        /* Atirgul O'yini */
+        .rose-section { padding: 50px 20px; text-align: center; display: none; }
+        .rose { position: relative; width: 150px; height: 150px; margin: 0 auto; }
+        .petal { position: absolute; width: 50px; height: 80px; background: var(--blue); border-radius: 50% 50% 10% 10%; left: 50px; transform-origin: bottom center; cursor: pointer; transition: 0.6s; border: 1px solid var(--cyan); box-shadow: inset 0 0 15px rgba(0,0,0,0.3); }
 
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        /* Scratch Card */
+        .scratch-container { position: relative; width: 280px; height: 160px; margin: 40px auto; display: none; border: 2px solid var(--cyan); border-radius: 20px; overflow: hidden; box-shadow: var(--glow); }
+        .scratch-content { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #000a12; font-weight: 600; text-align: center; padding: 15px; color: var(--cyan); }
+        #scratch-canvas { position: absolute; top: 0; left: 0; cursor: crosshair; }
+
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
+    <canvas id="canvas"></canvas>
     <audio id="bgMusic" loop><source src="music.mp3" type="audio/mpeg"></audio>
 
     <section class="hero" id="hero">
+        <div style="font-size: 3rem; margin-bottom: 10px;">💙</div>
         <h1>Happy Birthday!</h1>
         <div class="counter-box">
-            <p style="font-size: 0.8rem; margin-bottom: 5px;">Biz birga bo'lganimizga:</p>
+            <p style="font-size: 0.8rem; margin-bottom: 5px; opacity: 0.8;">Biz birga bo'lgan sehrli vaqt:</p>
             <div id="love-counter">Hisoblanmoqda...</div>
         </div>
-        <button class="start-btn" onclick="startExperience()">🎁 Sovg'ani ochish</button>
+        <button class="start-btn" onclick="startSurprise()">Ko'k atirgulni ochish 🌹</button>
     </section>
 
-    <section class="game-section" id="game">
-        <h2 style="color: var(--pink);">Meni qanchalik sevasiz?</h2>
-        <p style="font-size: 0.8rem;">Barglarni bitta-bitta uzib ko'ring...</p>
-        <div class="flower" id="flower">
-            <div class="flower-center"></div>
-        </div>
-        <h3 id="game-msg" style="margin-top: 20px; min-height: 30px;"></h3>
+    <section class="rose-section" id="rose-game">
+        <h2 style="color: var(--cyan);">Siz men uchun yagonasiz...</h2>
+        <p style="font-size: 0.8rem; margin-bottom: 30px;">Atirgul barglarini bitta-bitta bosing</p>
+        <div class="rose" id="rose"></div>
+        <h3 id="rose-msg" style="margin-top: 30px; color: var(--cyan); min-height: 40px;"></h3>
     </section>
 
-    <section class="treasure-section" id="treasure">
-        <div id="lock-area">
-            <div class="lock-icon">🔒</div>
-            <h3>Maxfiy xatni ochish uchun parolni kiriting</h3>
-            <p style="font-size: 0.7rem;">(Sizni eng ko'p nima deb chaqiraman?)</p>
-            <input type="text" id="pass" class="secret-input" placeholder="Parol...">
-            <br>
-            <button class="start-btn" onclick="checkLock()">Ochish</button>
-        </div>
-        <div id="secret-message" class="hidden">
-            <h2 style="color: var(--pink);">Seni hammadan ham ko'proq yaxshi ko'raman! 💖</h2>
-            <p>Sen hayotimdagi eng to'g'ri tanlovimsan. Doim yonimda bo'l...</p>
-        </div>
-    </section>
+    <div id="scratch-area" class="scratch-container">
+        <div class="scratch-content">Siz mening eng go'zal ko'k atirgulimsiz! Uni doim asrayman. ❤️</div>
+        <canvas id="scratch-canvas" width="280" height="160"></canvas>
+    </div>
 
     <script>
-        // 1. Musiqa va Boshlash
-        function startExperience() {
-            document.getElementById('bgMusic').play();
-            document.getElementById('game').style.display = 'block';
-            window.scrollTo({ top: document.getElementById('game').offsetTop, behavior: 'smooth' });
-            createFlower();
+        // 1. Sehrli ko'k zarralar (Particles)
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particles = [];
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x; this.y = y;
+                this.size = Math.random() * 4 + 1;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 2 - 1;
+                this.color = `rgba(0, 194, 255, ${Math.random()})`;
+            }
+            update() { this.x += this.speedX; this.y += this.speedY; if (this.size > 0.1) this.size -= 0.05; }
+            draw() { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
         }
 
-        // 2. Sekundomer (Sana: 2023, 5, 15 - yil, oy-1, kun)
+        window.addEventListener('mousemove', (e) => { for(let i=0; i<3; i++) particles.append(new Particle(e.x, e.y)); }); 
+        // Yuqoridagi xatoni to'g'irlash: particles.push()
+        window.addEventListener('mousemove', (e) => { for(let i=0; i<3; i++) particles.push(new Particle(e.x, e.y)); });
+        window.addEventListener('touchstart', (e) => { for(let i=0; i<3; i++) particles.push(new Particle(e.touches[0].clientX, e.touches[0].clientY)); });
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update(); particles[i].draw();
+                if (particles[i].size <= 0.1) { particles.splice(i, 1); i--; }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // 2. Love Counter
         function updateCounter() {
-            const start = new Date(2025, 7, 5);
+            const start = new Date(2025, 7, 5); // SANANI TO'G'IRLANG
             const now = new Date();
             const diff = now - start;
             const d = Math.floor(diff / 86400000);
             const h = Math.floor((diff / 3600000) % 24);
             const m = Math.floor((diff / 60000) % 60);
             const s = Math.floor((diff / 1000) % 60);
-            document.getElementById('love-counter').innerText = `${d} kun, ${h}:${m}:${s}`;
+            document.getElementById('love-counter').innerText = `${d} kun, ${h} soat, ${m}:${s}`;
         }
         setInterval(updateCounter, 1000);
 
-        // 3. Romashka o'yini
-        let petalsLeft = 8;
-        function createFlower() {
-            const flower = document.getElementById('flower');
-            for(let i=0; i<8; i++) {
+        // 3. Atirgul o'yini logikasi
+        let petals = 6;
+        function createRose() {
+            const rose = document.getElementById('rose');
+            rose.innerHTML = '';
+            for(let i=0; i<petals; i++) {
                 const p = document.createElement('div');
                 p.className = 'petal';
-                p.style.transform = `rotate(${i * 45}deg)`;
+                p.style.transform = `rotate(${i * (360/petals)}deg)`;
                 p.onclick = function() {
                     this.style.opacity = '0';
-                    this.style.transform += ' translateY(50px)';
-                    petalsLeft--;
-                    const msgs = ["Sevadi", "Juda ko'p sevadi", "Sog'inadi", "Faqat sizni deydi"];
-                    document.getElementById('game-msg').innerText = msgs[Math.floor(Math.random()*msgs.length)];
-                    if(petalsLeft === 0) {
-                        document.getElementById('game-msg').innerText = "HAMMADAN KO'P SEVADI! ✨";
-                        document.getElementById('treasure').style.display = 'block';
+                    this.style.transform += ' scale(0.5) translateY(-50px)';
+                    petals--;
+                    const words = ["Go'zalim", "Yagonam", "Sadoqatim", "Baxtim", "Sog'inchim"];
+                    document.getElementById('rose-msg').innerText = words[Math.floor(Math.random()*words.length)];
+                    if(petals === 0) {
+                        document.getElementById('rose-msg').innerText = "SIZ MENING MO'JIZAMSIZ! 💙";
+                        document.getElementById('scratch-area').style.display = 'block';
+                        initScratch();
                     }
                 };
-                flower.appendChild(p);
+                rose.appendChild(p);
             }
         }
 
-        // 4. Xazina qutisi
-        function checkLock() {
-            const val = document.getElementById('pass').value.toLowerCase();
-            if(val === "asalim" || val === "jonim") { // SHU YERGA JAVOBNI YOZING
-                document.getElementById('lock-area').classList.add('hidden');
-                document.getElementById('secret-message').classList.remove('hidden');
-            } else {
-                alert("Xato! Yana o'ylab ko'ring 🤨");
-            }
+        // 4. Scratch Card
+        function initScratch() {
+            const sc = document.getElementById('scratch-canvas');
+            const sctx = sc.getContext('2d');
+            sctx.fillStyle = '#1a3a5a';
+            sctx.fillRect(0, 0, 280, 160);
+            sctx.font = "16px Montserrat";
+            sctx.fillStyle = "#00f2ff";
+            sctx.fillText("Barmog'ingiz bilan qiring", 40, 85);
+            sctx.globalCompositeOperation = 'destination-out';
+
+            const scratch = (e) => {
+                const rect = sc.getBoundingClientRect();
+                const x = (e.clientX || e.touches[0].clientX) - rect.left;
+                const y = (e.clientY || e.touches[0].clientY) - rect.top;
+                sctx.beginPath(); sctx.arc(x, y, 20, 0, Math.PI * 2); sctx.fill();
+            };
+            sc.addEventListener('mousemove', scratch);
+            sc.addEventListener('touchmove', scratch);
+        }
+
+        function startSurprise() {
+            document.getElementById('bgMusic').play();
+            document.getElementById('rose-game').style.display = 'block';
+            createRose();
+            window.scrollTo({ top: document.getElementById('rose-game').offsetTop, behavior: 'smooth' });
         }
         updateCounter();
     </script>

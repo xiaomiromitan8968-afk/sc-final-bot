@@ -3,21 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doliya Particle Game</title>
+    <title>Ism Yozish va Olov Effekti</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             background-color: black;
             overflow: hidden;
-            touch-action: none; /* Telefonda ekranni surishni to'xtatish uchun */
+            touch-action: none; /* Ekranni surishni to'xtatish */
+            font-family: Arial, sans-serif;
         }
         canvas {
             display: block;
         }
+        /* Tugmalar uchun dizayn */
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            pointer-events: none; /* Tugmalardan tashqari joy bosilishi uchun */
+        }
+        button {
+            pointer-events: auto; /* Tugmalarni bosish mumkin qilish */
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+            color: white;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        #btnBlue {
+            background-color: #007bff;
+            box-shadow: 0 0 15px #007bff;
+        }
+        #btnRed {
+            background-color: #ff3300;
+            box-shadow: 0 0 15px #ff3300;
+        }
     </style>
 </head>
 <body>
+
+<div class="controls">
+    <button id="btnBlue">Ism Yozish</button>
+    <button id="btnRed">Olov Yoqish</button>
+</div>
 
 <canvas id="gameCanvas"></canvas>
 
@@ -25,34 +64,13 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Ekranni to'liq egallash
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
     let particles = [];
-    let bullets = [];
     const fireColors = ['#ff0000', '#ff5a00', '#ff9a00', '#ffce00', '#ffe808'];
-
-    // O'yinchi (Kema)
-    const player = {
-        x: canvas.width / 2,
-        y: canvas.height - 50,
-        width: 30,
-        height: 40
-    };
-
-    // Sichqoncha yoki barmoq harakatini kuzatish
-    function movePlayer(e) {
-        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        player.x = clientX;
-    }
-    window.addEventListener('mousemove', movePlayer);
-    window.addEventListener('touchmove', movePlayer);
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        initParticles(); // Ekran o'zgarsa yozuvni qayta chizish
-    });
+    let currentName = "DOLIYA";
+    let isFireModeActive = false; // Qizil tugma bosilganda yozishni boshlaydi
 
     // Zarracha (Particle) obyekti
     class Particle {
@@ -60,8 +78,8 @@
             this.x = x;
             this.y = y;
             this.size = 3;
-            this.solid = true; // Boshida qattiq (kulrang)
-            this.color = '#555'; // Yozuvning boshlang'ich rangi
+            this.solid = true;
+            this.color = '#777'; // Boshlang'ich kulrang rang
             this.vx = 0;
             this.vy = 0;
             this.gravity = 0.2;
@@ -70,11 +88,10 @@
 
         update() {
             if (!this.solid) {
-                // Agar parchalangan bo'lsa, olovga aylanib pastga tushadi
                 this.x += this.vx;
                 this.vy += this.gravity;
                 this.y += this.vy;
-                this.alpha -= 0.01; // Sekin yo'qolib boradi
+                this.alpha -= 0.015; // Sekin yo'qolib borishi
             }
         }
 
@@ -87,59 +104,32 @@
         }
     }
 
-    // O'q obyekti
-    class Bullet {
-        constructor(x, y) {
-            this.x = x;
-            this.y = y;
-            this.speed = 10;
-            this.radius = 3;
-        }
-
-        update() {
-            this.y -= this.speed;
-        }
-
-        draw() {
-            ctx.fillStyle = '#00ffcc'; // O'qning rangi
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
-
-    // Yozuvni zarrachalarga aylantirish funksiyasi
-    function initParticles() {
+    // Yozuvni zarrachalarga aylantirish
+    function initParticles(text) {
         particles = [];
         const textCanvas = document.createElement('canvas');
         const textCtx = textCanvas.getContext('2d');
         textCanvas.width = canvas.width;
         textCanvas.height = canvas.height;
 
-        textCtx.fillStyle = "white";
-        // Harflarni vertikal qilib yozish
-        const word = ['D', 'O', 'L', 'I', 'Y', 'A'];
+        // Ism uzunligiga qarab harf hajmini moslash
+        let fontSize = canvas.width / (text.length * 0.6);
+        if (fontSize > 150) fontSize = 150; 
         
-        // Ekranga qarab harf o'lchamini moslash
-        let fontSize = canvas.width > 600 ? 120 : 80; 
+        textCtx.fillStyle = "white";
         textCtx.font = `bold ${fontSize}px Arial`;
         textCtx.textAlign = "center";
         textCtx.textBaseline = "middle";
 
-        let startY = 100;
-        let spacing = fontSize * 0.85;
-
-        for (let i = 0; i < word.length; i++) {
-            textCtx.fillText(word[i], textCanvas.width / 2, startY + i * spacing);
-        }
+        // Yozuvni gorizontal qilib o'rtaga joylashtiramiz
+        textCtx.fillText(text.toUpperCase(), textCanvas.width / 2, textCanvas.height / 2 - 50);
 
         const imgData = textCtx.getImageData(0, 0, textCanvas.width, textCanvas.height).data;
 
-        // Har 4 pikselni tekshirib, qora bo'lmaganlarini zarrachaga aylantiramiz
         for (let y = 0; y < textCanvas.height; y += 4) {
             for (let x = 0; x < textCanvas.width; x += 4) {
                 const index = (y * textCanvas.width + x) * 4;
-                const alpha = imgData[index + 3]; // Shaffoflik darajasi
+                const alpha = imgData[index + 3];
                 
                 if (alpha > 128) {
                     particles.push(new Particle(x, y));
@@ -148,9 +138,9 @@
         }
     }
 
-    // Portlash effekti (O'q tekkanda)
+    // Portlash (Olov) effekti x, y koordinatalarida
     function explode(hitX, hitY) {
-        const explosionRadius = 35; // Qancha maydon parchalanishi
+        const explosionRadius = 40; // Teggan joyda qancha maydon yonishi
 
         particles.forEach(p => {
             if (p.solid) {
@@ -160,90 +150,76 @@
 
                 if (distance < explosionRadius) {
                     p.solid = false;
-                    // Tasodifiy olov rangini beramiz
                     p.color = fireColors[Math.floor(Math.random() * fireColors.length)];
-                    // Atrofga sochilish tezligi
-                    p.vx = (Math.random() - 0.5) * 10;
-                    p.vy = (Math.random() - 1) * 8; 
+                    p.vx = (Math.random() - 0.5) * 8; // Ikki yonga sochilish
+                    p.vy = (Math.random() - 1) * 6;   // Tepaga qarab otilish va pastga tushish
                 }
             }
         });
     }
 
-    let frameCount = 0;
+    // Sichqoncha yoki barmoq bilan teginganda
+    function handleTouch(e) {
+        if (!isFireModeActive) return; // Faqat qizil tugma yoqiq bo'lsa ishlaydi
 
-    // Asosiy o'yin tsikli (Game Loop)
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        explode(clientX, clientY);
+    }
+
+    // Ekran bosilganda yoki ustida harakatlantirilganda yonishi uchun
+    window.addEventListener('pointerdown', handleTouch);
+    window.addEventListener('pointermove', (e) => {
+        // Sichqoncha bosib turilgan bo'lsa yoki telefonda surilsa
+        if (e.buttons > 0 || e.touches) {
+            handleTouch(e);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        initParticles(currentName);
+    });
+
+    // --- TUGMALAR UCHUN HODISALAR ---
+
+    // 1. Ko'k tugma (Ism o'zgartirish)
+    document.getElementById('btnBlue').addEventListener('click', () => {
+        const newName = prompt("Yangi ism kiriting:");
+        if (newName && newName.trim() !== "") {
+            currentName = newName.trim();
+            initParticles(currentName); // Zarrachalarni yangi ism bilan qayta chizish
+            isFireModeActive = false; // Yozuv yangilanganda olov rejimini o'chiramiz
+            document.getElementById('btnRed').innerText = "Olov Yoqish";
+            document.getElementById('btnRed').style.transform = "scale(1)";
+        }
+    });
+
+    // 2. Qizil tugma (Olov rejimini yoqish)
+    document.getElementById('btnRed').addEventListener('click', (e) => {
+        isFireModeActive = true;
+        e.target.innerText = "Yozuvni barmog'ingiz bilan kuydiring! 🔥";
+        e.target.style.transform = "scale(1.05)"; // Tugma biroz kattalashadi
+    });
+
+    // Asosiy o'yin tsikli
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Kemani chizish (Uchburchak)
-        ctx.fillStyle = "yellow";
-        ctx.beginPath();
-        ctx.moveTo(player.x, player.y - player.height / 2); // Uch qismi
-        ctx.lineTo(player.x - player.width / 2, player.y + player.height / 2); // Chap qismi
-        ctx.lineTo(player.x + player.width / 2, player.y + player.height / 2); // O'ng qismi
-        ctx.fill();
-
-        // Kema tagidan chiqadigan olov (thruster)
-        ctx.fillStyle = "red";
-        ctx.beginPath();
-        ctx.moveTo(player.x - 10, player.y + player.height / 2);
-        ctx.lineTo(player.x + 10, player.y + player.height / 2);
-        ctx.lineTo(player.x, player.y + player.height / 2 + Math.random() * 20 + 10);
-        ctx.fill();
-
-        // Har 7 kadrda bitta o'q otiladi
-        if (frameCount % 7 === 0) {
-            bullets.push(new Bullet(player.x, player.y - player.height / 2));
-        }
-
-        // Zarrachalarni chizish va yangilash
         particles.forEach(p => {
             p.update();
             p.draw();
         });
 
-        // O'qlarni yangilash va teginishni (collision) tekshirish
-        for (let i = bullets.length - 1; i >= 0; i--) {
-            let b = bullets[i];
-            b.update();
-            b.draw();
-
-            // O'q ekrandan chiqib ketsa o'chirish
-            if (b.y < 0) {
-                bullets.splice(i, 1);
-                continue;
-            }
-
-            // O'q qattiq zarrachalarga tekkanini tekshirish
-            let hit = false;
-            for (let j = 0; j < particles.length; j++) {
-                let p = particles[j];
-                if (p.solid) {
-                    const dx = b.x - p.x;
-                    const dy = b.y - p.y;
-                    if (Math.sqrt(dx * dx + dy * dy) < 10) { // Tegish radiusi
-                        explode(b.x, b.y);
-                        hit = true;
-                        break; // Bitta o'q bitta joyni portlatadi
-                    }
-                }
-            }
-
-            if (hit) {
-                bullets.splice(i, 1); // O'qni o'chirish
-            }
-        }
-
-        // Xotirani tozalash uchun ko'rinmas zarrachalarni o'chirish
+        // O'chib ketgan zarrachalarni xotiradan tozalash
         particles = particles.filter(p => p.alpha > 0);
 
-        frameCount++;
         requestAnimationFrame(animate);
     }
 
-    // O'yinni boshlash
-    initParticles();
+    // Ishga tushirish
+    initParticles(currentName);
     animate();
 
 </script>

@@ -3,215 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abadiy Sevgi 💙</title>
+    <title>Doliya Particle Game</title>
     <style>
-        /* Umumiy ko'rinish */
-        body, html {
-            margin: 0; padding: 0; height: 100%; overflow: hidden;
-            background: #00050a;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #e0f2ff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            overflow: hidden;
+            touch-action: none; /* Telefonda ekranni surishni to'xtatish uchun */
         }
-
-        /* Fon effekti */
-        .bg-glow {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #001f3f 0%, #00050a 100%);
-            z-index: -1;
-        }
-
-        /* Kirish ekrani */
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 1000;
-            transition: 1.2s ease-in-out;
-        }
-
-        .overlay button {
-            padding: 15px 40px; font-size: 1.2rem;
-            background: transparent; color: #00a2ff;
-            border: 2px solid #00a2ff; border-radius: 50px;
-            cursor: pointer; box-shadow: 0 0 20px #004b8d;
-            transition: 0.3s;
-        }
-
-        .overlay button:hover {
-            background: #00a2ff; color: #fff;
-            box-shadow: 0 0 40px #00a2ff;
-        }
-
-        /* Asosiy konteyner - yozuvlar orasini ochish uchun padding qo'shildi */
-        .main-content {
-            text-align: center;
-            width: 90%;
-            max-width: 600px;
-            z-index: 10;
-        }
-
-        /* Typewriter matni uchun joy ajratish */
-        #typewriter {
-            font-size: 2rem;
-            min-height: 2.5em; /* Yozuvlar tushib ketmasligi uchun balandlik */
-            margin-bottom: 40px; /* Taymerdan uzoqlashtirish */
-            text-shadow: 0 0 15px #00a2ff;
-            line-height: 1.4;
-        }
-
-        /* Taymer stili */
-        .timer-box {
-            background: rgba(0, 31, 63, 0.6);
-            padding: 20px;
-            border-radius: 20px;
-            border: 1px solid rgba(0, 162, 255, 0.4);
-            backdrop-filter: blur(5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .timer-title {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
+        canvas {
             display: block;
-            color: #00a2ff;
-        }
-
-        #timer-display {
-            font-size: 1.1rem;
-            line-height: 1.8;
-        }
-
-        /* Effektlar */
-        .falling-rose {
-            position: absolute; top: -50px;
-            animation: fall linear forwards;
-            pointer-events: none;
-        }
-
-        @keyframes fall {
-            to { transform: translateY(110vh) rotate(360deg); }
-        }
-
-        .sparkle {
-            position: absolute; pointer-events: none;
-            animation: explode 0.8s ease-out forwards;
-        }
-
-        @keyframes explode {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
         }
     </style>
 </head>
-<body onclick="createSparkle(event)">
+<body>
 
-    <div class="bg-glow"></div>
+<canvas id="gameCanvas"></canvas>
 
-    <div class="overlay" id="overlay">
-        <button onclick="startApp()">Ochish 💙</button>
-    </div>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
 
-    <div class="main-content">
-        <div id="typewriter"></div>
-        
-        <div class="timer-box">
-            <span class="timer-title">Bizning baxtli kunlarimiz</span>
-            <div id="timer-display">Hisoblanmoqda...</div>
-        </div>
+    // Ekranni to'liq egallash
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-        <p style="margin-top: 40px; opacity: 0.5; font-size: 0.8rem;">
-            Ekranga bosing ✨
-        </p>
-    </div>
+    let particles = [];
+    let bullets = [];
+    const fireColors = ['#ff0000', '#ff5a00', '#ff9a00', '#ffce00', '#ffe808'];
 
-    <audio id="bgMusic" loop>
-        <source src="musiqa.mp3" type="audio/mpeg">
-    </audio>
+    // O'yinchi (Kema)
+    const player = {
+        x: canvas.width / 2,
+        y: canvas.height - 50,
+        width: 30,
+        height: 40
+    };
 
-    <script>
-        // 1. Tanishgan sana: 2025-yil, Iyul (6-indeks), 5-kun
-        const startDate = new Date(2025, 6, 5, 0, 0, 0);
+    // Sichqoncha yoki barmoq harakatini kuzatish
+    function movePlayer(e) {
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        player.x = clientX;
+    }
+    window.addEventListener('mousemove', movePlayer);
+    window.addEventListener('touchmove', movePlayer);
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        initParticles(); // Ekran o'zgarsa yozuvni qayta chizish
+    });
 
-        function startApp() {
-            // Overlayni yopish
-            const overlay = document.getElementById('overlay');
-            overlay.style.opacity = '0';
-            setTimeout(() => overlay.style.display = 'none', 1200);
-
-            // Musiqani yoqish
-            const music = document.getElementById('bgMusic');
-            music.play().catch(() => console.log("Musiqa uchun fayl topilmadi"));
-
-            // Funksiyalarni ishga tushirish
-            typeWriter("Sizni uchratgan kunim — hayotimning eng chiroyli sahifasi bo'lib qoladi... 💙");
-            setInterval(updateTimer, 1000);
-            setInterval(createRose, 500);
+    // Zarracha (Particle) obyekti
+    class Particle {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            this.size = 3;
+            this.solid = true; // Boshida qattiq (kulrang)
+            this.color = '#555'; // Yozuvning boshlang'ich rangi
+            this.vx = 0;
+            this.vy = 0;
+            this.gravity = 0.2;
+            this.alpha = 1;
         }
 
-        // Harfma-harf yozish funksiyasi
-        function typeWriter(text) {
-            let i = 0;
-            const container = document.getElementById("typewriter");
-            function type() {
-                if (i < text.length) {
-                    container.innerHTML += text.charAt(i);
-                    i++;
-                    setTimeout(type, 70);
+        update() {
+            if (!this.solid) {
+                // Agar parchalangan bo'lsa, olovga aylanib pastga tushadi
+                this.x += this.vx;
+                this.vy += this.gravity;
+                this.y += this.vy;
+                this.alpha -= 0.01; // Sekin yo'qolib boradi
+            }
+        }
+
+        draw() {
+            if (this.alpha <= 0) return;
+            ctx.globalAlpha = Math.max(0, this.alpha);
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.size, this.size);
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    // O'q obyekti
+    class Bullet {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            this.speed = 10;
+            this.radius = 3;
+        }
+
+        update() {
+            this.y -= this.speed;
+        }
+
+        draw() {
+            ctx.fillStyle = '#00ffcc'; // O'qning rangi
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // Yozuvni zarrachalarga aylantirish funksiyasi
+    function initParticles() {
+        particles = [];
+        const textCanvas = document.createElement('canvas');
+        const textCtx = textCanvas.getContext('2d');
+        textCanvas.width = canvas.width;
+        textCanvas.height = canvas.height;
+
+        textCtx.fillStyle = "white";
+        // Harflarni vertikal qilib yozish
+        const word = ['D', 'O', 'L', 'I', 'Y', 'A'];
+        
+        // Ekranga qarab harf o'lchamini moslash
+        let fontSize = canvas.width > 600 ? 120 : 80; 
+        textCtx.font = `bold ${fontSize}px Arial`;
+        textCtx.textAlign = "center";
+        textCtx.textBaseline = "middle";
+
+        let startY = 100;
+        let spacing = fontSize * 0.85;
+
+        for (let i = 0; i < word.length; i++) {
+            textCtx.fillText(word[i], textCanvas.width / 2, startY + i * spacing);
+        }
+
+        const imgData = textCtx.getImageData(0, 0, textCanvas.width, textCanvas.height).data;
+
+        // Har 4 pikselni tekshirib, qora bo'lmaganlarini zarrachaga aylantiramiz
+        for (let y = 0; y < textCanvas.height; y += 4) {
+            for (let x = 0; x < textCanvas.width; x += 4) {
+                const index = (y * textCanvas.width + x) * 4;
+                const alpha = imgData[index + 3]; // Shaffoflik darajasi
+                
+                if (alpha > 128) {
+                    particles.push(new Particle(x, y));
                 }
             }
-            type();
+        }
+    }
+
+    // Portlash effekti (O'q tekkanda)
+    function explode(hitX, hitY) {
+        const explosionRadius = 35; // Qancha maydon parchalanishi
+
+        particles.forEach(p => {
+            if (p.solid) {
+                const dx = p.x - hitX;
+                const dy = p.y - hitY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < explosionRadius) {
+                    p.solid = false;
+                    // Tasodifiy olov rangini beramiz
+                    p.color = fireColors[Math.floor(Math.random() * fireColors.length)];
+                    // Atrofga sochilish tezligi
+                    p.vx = (Math.random() - 0.5) * 10;
+                    p.vy = (Math.random() - 1) * 8; 
+                }
+            }
+        });
+    }
+
+    let frameCount = 0;
+
+    // Asosiy o'yin tsikli (Game Loop)
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Kemani chizish (Uchburchak)
+        ctx.fillStyle = "yellow";
+        ctx.beginPath();
+        ctx.moveTo(player.x, player.y - player.height / 2); // Uch qismi
+        ctx.lineTo(player.x - player.width / 2, player.y + player.height / 2); // Chap qismi
+        ctx.lineTo(player.x + player.width / 2, player.y + player.height / 2); // O'ng qismi
+        ctx.fill();
+
+        // Kema tagidan chiqadigan olov (thruster)
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.moveTo(player.x - 10, player.y + player.height / 2);
+        ctx.lineTo(player.x + 10, player.y + player.height / 2);
+        ctx.lineTo(player.x, player.y + player.height / 2 + Math.random() * 20 + 10);
+        ctx.fill();
+
+        // Har 7 kadrda bitta o'q otiladi
+        if (frameCount % 7 === 0) {
+            bullets.push(new Bullet(player.x, player.y - player.height / 2));
         }
 
-        // Taymerni yangilash
-        function updateTimer() {
-            const now = new Date();
-            const diff = now - startDate;
+        // Zarrachalarni chizish va yangilash
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const mins = Math.floor((diff / 1000 / 60) % 60);
-            const secs = Math.floor((diff / 1000) % 60);
+        // O'qlarni yangilash va teginishni (collision) tekshirish
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            let b = bullets[i];
+            b.update();
+            b.draw();
 
-            document.getElementById("timer-display").innerHTML = 
-                `<b>${days}</b> kun, <b>${hours}</b> soat, <br> <b>${mins}</b> daqiqa va <b>${secs}</b> soniya`;
-        }
+            // O'q ekrandan chiqib ketsa o'chirish
+            if (b.y < 0) {
+                bullets.splice(i, 1);
+                continue;
+            }
 
-        // Ko'k atirgullar yomg'iri
-        function createRose() {
-            const rose = document.createElement('div');
-            rose.classList.add('falling-rose');
-            rose.innerHTML = '💙';
-            rose.style.left = Math.random() * 100 + 'vw';
-            rose.style.fontSize = (Math.random() * 20 + 15) + 'px';
-            rose.style.animationDuration = (Math.random() * 3 + 4) + 's';
-            rose.style.opacity = Math.random();
-            document.body.appendChild(rose);
-            setTimeout(() => rose.remove(), 7000);
-        }
+            // O'q qattiq zarrachalarga tekkanini tekshirish
+            let hit = false;
+            for (let j = 0; j < particles.length; j++) {
+                let p = particles[j];
+                if (p.solid) {
+                    const dx = b.x - p.x;
+                    const dy = b.y - p.y;
+                    if (Math.sqrt(dx * dx + dy * dy) < 10) { // Tegish radiusi
+                        explode(b.x, b.y);
+                        hit = true;
+                        break; // Bitta o'q bitta joyni portlatadi
+                    }
+                }
+            }
 
-        // Uchqunlar effekti
-        function createSparkle(e) {
-            for (let i = 0; i < 6; i++) {
-                const s = document.createElement('div');
-                s.classList.add('sparkle');
-                s.innerHTML = '✨';
-                s.style.left = e.clientX + 'px';
-                s.style.top = e.clientY + 'px';
-                
-                const x = (Math.random() - 0.5) * 150;
-                const y = (Math.random() - 0.5) * 150;
-                s.style.setProperty('--x', x + 'px');
-                s.style.setProperty('--y', y + 'px');
-                
-                document.body.appendChild(s);
-                setTimeout(() => s.remove(), 800);
+            if (hit) {
+                bullets.splice(i, 1); // O'qni o'chirish
             }
         }
-    </script>
+
+        // Xotirani tozalash uchun ko'rinmas zarrachalarni o'chirish
+        particles = particles.filter(p => p.alpha > 0);
+
+        frameCount++;
+        requestAnimationFrame(animate);
+    }
+
+    // O'yinni boshlash
+    initParticles();
+    animate();
+
+</script>
 </body>
 </html>

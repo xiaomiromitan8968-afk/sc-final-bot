@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faqat Sen Uchun 💙</title>
+    <title>Abadiy Sevgi 💙</title>
     <style>
+        /* Umumiy ko'rinish */
         body, html {
             margin: 0; padding: 0; height: 100%; overflow: hidden;
             background: #00050a;
-            font-family: 'Georgia', serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #e0f2ff;
-            cursor: crosshair;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* Fon gradienti */
+        /* Fon effekti */
         .bg-glow {
             position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100vw; height: 100vh;
-            background: radial-gradient(circle, #001f3f 0%, #00050a 80%);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #001f3f 0%, #00050a 100%);
             z-index: -1;
         }
 
@@ -28,55 +29,82 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 1000;
-            transition: 1.5s;
+            transition: 1.2s ease-in-out;
         }
 
         .overlay button {
-            padding: 15px 45px; font-size: 20px;
+            padding: 15px 40px; font-size: 1.2rem;
             background: transparent; color: #00a2ff;
-            border: 1px solid #00a2ff; border-radius: 30px;
+            border: 2px solid #00a2ff; border-radius: 50px;
             cursor: pointer; box-shadow: 0 0 20px #004b8d;
+            transition: 0.3s;
         }
 
-        /* Asosiy konteyner */
+        .overlay button:hover {
+            background: #00a2ff; color: #fff;
+            box-shadow: 0 0 40px #00a2ff;
+        }
+
+        /* Asosiy konteyner - yozuvlar orasini ochish uchun padding qo'shildi */
         .main-content {
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            height: 100vh; text-align: center; padding: 20px;
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+            z-index: 10;
         }
 
+        /* Typewriter matni uchun joy ajratish */
         #typewriter {
-            font-size: 2.5rem; height: 1.2em;
+            font-size: 2rem;
+            min-height: 2.5em; /* Yozuvlar tushib ketmasligi uchun balandlik */
+            margin-bottom: 40px; /* Taymerdan uzoqlashtirish */
             text-shadow: 0 0 15px #00a2ff;
-            margin-bottom: 20px;
+            line-height: 1.4;
         }
 
         /* Taymer stili */
-        .timer {
-            background: rgba(0, 31, 63, 0.4);
-            padding: 15px 25px; border-radius: 15px;
-            border: 1px solid rgba(0, 162, 255, 0.3);
-            font-size: 1.1rem; letter-spacing: 1px;
+        .timer-box {
+            background: rgba(0, 31, 63, 0.6);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 162, 255, 0.4);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .timer-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            display: block;
+            color: #00a2ff;
+        }
+
+        #timer-display {
+            font-size: 1.1rem;
+            line-height: 1.8;
         }
 
         /* Effektlar */
-        .particle {
-            position: absolute; pointer-events: none;
-            animation: fly 3s linear forwards;
-        }
-
-        @keyframes fly {
-            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-            100% { transform: translate(var(--x), var(--y)) rotate(360deg); opacity: 0; }
-        }
-
         .falling-rose {
             position: absolute; top: -50px;
             animation: fall linear forwards;
+            pointer-events: none;
         }
 
         @keyframes fall {
             to { transform: translateY(110vh) rotate(360deg); }
+        }
+
+        .sparkle {
+            position: absolute; pointer-events: none;
+            animation: explode 0.8s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
         }
     </style>
 </head>
@@ -85,18 +113,19 @@
     <div class="bg-glow"></div>
 
     <div class="overlay" id="overlay">
-        <button onclick="startExperience()">Mening ko'k atirgulim uchun... 🌹</button>
+        <button onclick="startApp()">Ochish 💙</button>
     </div>
 
     <div class="main-content">
-        <h1 id="typewriter"></h1>
+        <div id="typewriter"></div>
         
-        <div class="timer" id="timer">
-            Biz birgamiz: <span id="days">0</span> kun, <span id="hours">0</span> soat...
+        <div class="timer-box">
+            <span class="timer-title">Bizning baxtli kunlarimiz</span>
+            <div id="timer-display">Hisoblanmoqda...</div>
         </div>
 
-        <p style="margin-top: 30px; opacity: 0.6; font-style: italic;">
-            (Ekranning istalgan joyiga bosing ✨)
+        <p style="margin-top: 40px; opacity: 0.5; font-size: 0.8rem;">
+            Ekranga bosing ✨
         </p>
     </div>
 
@@ -105,37 +134,40 @@
     </audio>
 
     <script>
-        // 1. Tanishgan sanangizni shu yerga yozing (Yil, Oy-1, Kun)
-        // Masalan: 2023 yil 15-oktabr -> new Date(2023, 9, 15)
-        const startDate = new Date(2023, 0, 1); 
+        // 1. Tanishgan sana: 2025-yil, Iyul (6-indeks), 5-kun
+        const startDate = new Date(2025, 6, 5, 0, 0, 0);
 
-        function startExperience() {
-            document.getElementById('overlay').style.opacity = '0';
-            setTimeout(() => document.getElementById('overlay').style.display = 'none', 1500);
-            
-            document.getElementById('bgMusic').play();
-            
-            typeWriter("Seni dunyodagi hamma narsadan ko'proq yaxshi ko'raman! 💙");
-            updateTimer();
+        function startApp() {
+            // Overlayni yopish
+            const overlay = document.getElementById('overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 1200);
+
+            // Musiqani yoqish
+            const music = document.getElementById('bgMusic');
+            music.play().catch(() => console.log("Musiqa uchun fayl topilmadi"));
+
+            // Funksiyalarni ishga tushirish
+            typeWriter("Sizni uchratgan kunim — hayotimning eng chiroyli sahifasi bo'lib qoladi... 💙");
             setInterval(updateTimer, 1000);
-            setInterval(createFallingRose, 500);
+            setInterval(createRose, 500);
         }
 
-        // Typewriter effekti
+        // Harfma-harf yozish funksiyasi
         function typeWriter(text) {
             let i = 0;
-            const elem = document.getElementById("typewriter");
+            const container = document.getElementById("typewriter");
             function type() {
                 if (i < text.length) {
-                    elem.innerHTML += text.charAt(i);
+                    container.innerHTML += text.charAt(i);
                     i++;
-                    setTimeout(type, 100);
+                    setTimeout(type, 70);
                 }
             }
             type();
         }
 
-        // Taymer funksiyasi
+        // Taymerni yangilash
         function updateTimer() {
             const now = new Date();
             const diff = now - startDate;
@@ -145,33 +177,12 @@
             const mins = Math.floor((diff / 1000 / 60) % 60);
             const secs = Math.floor((diff / 1000) % 60);
 
-            document.getElementById("days").innerText = days;
-            document.getElementById("hours").innerText = hours;
-            document.getElementById("timer").innerHTML = 
-                `Biz birgamiz: ${days} kun, ${hours} soat, ${mins} daqiqa, ${secs} soniya 💙`;
+            document.getElementById("timer-display").innerHTML = 
+                `<b>${days}</b> kun, <b>${hours}</b> soat, <br> <b>${mins}</b> daqiqa va <b>${secs}</b> soniya`;
         }
 
-        // Klik qilganda uchqunlar chiqishi
-        function createSparkle(e) {
-            for (let i = 0; i < 8; i++) {
-                const p = document.createElement('div');
-                p.classList.add('particle');
-                p.innerHTML = '✨';
-                p.style.left = e.clientX + 'px';
-                p.style.top = e.clientY + 'px';
-                
-                const vx = (Math.random() - 0.5) * 200;
-                const vy = (Math.random() - 0.5) * 200;
-                p.style.setProperty('--x', `${vx}px`);
-                p.style.setProperty('--y', `${vy}px`);
-                
-                document.body.appendChild(p);
-                setTimeout(() => p.remove(), 3000);
-            }
-        }
-
-        // Tushayotgan atirgullar
-        function createFallingRose() {
+        // Ko'k atirgullar yomg'iri
+        function createRose() {
             const rose = document.createElement('div');
             rose.classList.add('falling-rose');
             rose.innerHTML = '💙';
@@ -181,6 +192,25 @@
             rose.style.opacity = Math.random();
             document.body.appendChild(rose);
             setTimeout(() => rose.remove(), 7000);
+        }
+
+        // Uchqunlar effekti
+        function createSparkle(e) {
+            for (let i = 0; i < 6; i++) {
+                const s = document.createElement('div');
+                s.classList.add('sparkle');
+                s.innerHTML = '✨';
+                s.style.left = e.clientX + 'px';
+                s.style.top = e.clientY + 'px';
+                
+                const x = (Math.random() - 0.5) * 150;
+                const y = (Math.random() - 0.5) * 150;
+                s.style.setProperty('--x', x + 'px');
+                s.style.setProperty('--y', y + 'px');
+                
+                document.body.appendChild(s);
+                setTimeout(() => s.remove(), 800);
+            }
         }
     </script>
 </body>

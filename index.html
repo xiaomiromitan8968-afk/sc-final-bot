@@ -3,121 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sening Sehrli Dunyong 💙</title>
+    <title>Siz uchun maxsus 💙</title>
     <style>
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            background: radial-gradient(circle, #001d3d 0%, #000000 100%); 
-            overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; 
-        }
-        
-        /* VIDEO FON */
-        #bg-video {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover; z-index: -2; filter: brightness(0.5);
+        /* CSS - Tashqi ko'rinish */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle, #001f3f, #00050a); /* To'q ko'k gradient */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #e0f2ff;
         }
 
-        /* 3D ZARRALAR (CANVAS) */
-        #canvas3d { position: fixed; top: 0; left: 0; z-index: -1; }
+        /* Kirish ekrani (Autoplay cheklovini aylanib o'tish uchun) */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: 1s ease-in-out;
+        }
 
+        .overlay button {
+            padding: 15px 40px;
+            font-size: 22px;
+            background: transparent;
+            color: #0074D9;
+            border: 2px solid #0074D9;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 15px #0074D9;
+            transition: 0.3s;
+        }
+
+        .overlay button:hover {
+            background: #0074D9;
+            color: white;
+            box-shadow: 0 0 30px #0074D9;
+        }
+
+        /* Asosiy kontent */
         .container {
-            height: 100vh; display: flex; justify-content: center; align-items: center;
-            text-align: center; background: rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            position: relative;
+            z-index: 1;
         }
 
-        .card {
-            background: rgba(0, 140, 255, 0.1); backdrop-filter: blur(15px);
-            border: 2px solid #00f2ff; border-radius: 30px; padding: 40px;
-            box-shadow: 0 0 40px rgba(0, 242, 255, 0.3); animation: float 3s infinite ease-in-out;
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px #0074D9;
+            animation: glow 2s ease-in-out infinite alternate;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
+        p {
+            font-size: 1.2rem;
+            opacity: 0.8;
         }
 
-        h1 { color: #00f2ff; text-shadow: 0 0 15px #008cff; margin-bottom: 20px; }
-        
-        .rose { position: relative; width: 150px; height: 150px; margin: 20px auto; }
-        .petal { 
-            position: absolute; width: 45px; height: 75px; background: #008cff; 
-            border-radius: 50% 50% 10% 10%; left: 52px; transform-origin: bottom center; 
-            cursor: pointer; border: 1px solid #00f2ff; transition: 0.5s;
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #0074D9; }
+            to { text-shadow: 0 0 30px #00a2ff, 0 0 10px #fff; }
         }
 
-        .btn {
-            background: linear-gradient(45deg, #008cff, #00f2ff);
-            color: white; border: none; padding: 12px 35px;
-            border-radius: 50px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 0 15px #008cff; transition: 0.3s;
+        /* Uchib yuruvchi ko'k atirgullar */
+        .rose {
+            position: absolute;
+            top: -50px;
+            font-size: 30px;
+            user-select: none;
+            pointer-events: none;
+            animation: fall linear forwards;
+            filter: drop-shadow(0 0 5px #0074D9);
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(110vh) rotate(360deg);
+            }
+        }
+
+        /* Musiqa pleyeri (yashirin) */
+        #bgMusic {
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <video autoplay muted loop playsinline id="bg-video">
-        <source src="background.mp4" type="video/mp4">
-    </video>
-
-    <canvas id="canvas3d"></canvas>
-    <audio id="bgMusic" loop><source src="music.mp3" type="audio/mpeg"></audio>
+    <div class="overlay" id="overlay">
+        <p style="margin-bottom: 20px;">Siz uchun kichik sovg'a...</p>
+        <button onclick="startApp()">Ochish 🌹</button>
+    </div>
 
     <div class="container">
-        <div class="card" id="mainCard">
-            <h1>Sening Dunyong 💙</h1>
-            <div class="rose" id="rose"></div>
-            <p id="status">Barglarni uzing...</p>
-            <button class="btn" onclick="playAll()" id="startBtn" style="display:none;">Musiqani yoqish 🎵</button>
+        <div id="garden"></div>
+        <div class="content">
+            <h1>Sizni yaxshi ko'raman! 💙</h1>
+            <p>Dunyodagi eng go'zal ko'k atirgullar faqat siz uchun...</p>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <audio id="bgMusic" loop>
+        <source src="musiqa.mp3" type="audio/mpeg">
+    </audio>
+
     <script>
-        // --- 3D STARS ---
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({canvas: document.getElementById('canvas3d'), alpha: true});
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        // JavaScript - Mantiq va Effektlar
+        function startApp() {
+            // 1. Kirish ekranini yo'qotish
+            const overlay = document.getElementById('overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 1000);
 
-        const starGeo = new THREE.BufferGeometry();
-        const starPos = [];
-        for(let i=0; i<4000; i++) {
-            starPos.push((Math.random()-0.5)*1500, (Math.random()-0.5)*1500, (Math.random()-0.5)*1500);
-        }
-        starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-        const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0x00f2ff, size: 2}));
-        scene.add(stars);
-        camera.position.z = 1;
+            // 2. Musiqani chaldirish
+            const music = document.getElementById('bgMusic');
+            music.play().catch(error => {
+                console.log("Musiqa ijrosida xatolik: ", error);
+            });
 
-        function anim() {
-            requestAnimationFrame(anim);
-            stars.rotation.y += 0.0008;
-            renderer.render(scene, camera);
-        }
-        anim();
-
-        // --- GAME LOGIC ---
-        let petals = 6;
-        const rose = document.getElementById('rose');
-        for(let i=0; i<6; i++) {
-            const p = document.createElement('div');
-            p.className = 'petal';
-            p.style.transform = `rotate(${i*60}deg)`;
-            p.onclick = function() {
-                this.style.opacity = '0';
-                this.style.transform += ' scale(0) translateY(-100px)';
-                petals--;
-                if(petals === 0) {
-                    document.getElementById('status').innerText = "Tabriklayman! 🎂";
-                    document.getElementById('startBtn').style.display = 'inline-block';
-                }
-            };
-            rose.appendChild(p);
+            // 3. Atirgullar yomg'irini boshlash
+            setInterval(createRose, 400);
         }
 
-        function playAll() {
-            document.getElementById('bgMusic').play();
-            alert("Seni yaxshi ko'raman! 💙");
+        function createRose() {
+            const garden = document.getElementById('garden');
+            const rose = document.createElement('div');
+            rose.classList.add('rose');
+            
+            // Ko'k atirgullar va yuraklar aralashmasi
+            const items = ['💙', '🌹', '🦋'];
+            rose.innerText = items[Math.floor(Math.random() * items.length)];
+            
+            // Tasodifiy joylashuv va tezlik
+            rose.style.left = Math.random() * 100 + 'vw';
+            rose.style.animationDuration = Math.random() * 3 + 4 + 's'; // 4-7 soniya orasida tushadi
+            rose.style.opacity = Math.random() * 0.5 + 0.5;
+            rose.style.fontSize = Math.random() * 20 + 20 + 'px';
+
+            garden.appendChild(rose);
+
+            // Xotirani to'ldirmaslik uchun tushib bo'lganlarini o'chirish
+            setTimeout(() => {
+                rose.remove();
+            }, 7000);
         }
     </script>
 </body>

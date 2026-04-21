@@ -3,225 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ism Yozish va Olov Effekti</title>
+    <title>Abadiy Sevgi 💙</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: black;
-            overflow: hidden;
-            touch-action: none; /* Ekranni surishni to'xtatish */
-            font-family: Arial, sans-serif;
-        }
-        canvas {
-            display: block;
-        }
-        /* Tugmalar uchun dizayn */
-        .controls {
-            position: absolute;
-            bottom: 30px;
-            width: 100%;
+        /* Umumiy ko'rinish */
+        body, html {
+            margin: 0; padding: 0; height: 100%; overflow: hidden;
+            background: #00050a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #e0f2ff;
             display: flex;
             justify-content: center;
-            gap: 20px;
-            pointer-events: none; /* Tugmalardan tashqari joy bosilishi uchun */
+            align-items: center;
         }
-        button {
-            pointer-events: auto; /* Tugmalarni bosish mumkin qilish */
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            transition: transform 0.1s;
-            color: white;
+
+        /* Fon effekti */
+        .bg-glow {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #001f3f 0%, #00050a 100%);
+            z-index: -1;
         }
-        button:active {
-            transform: scale(0.95);
+
+        /* Kirish ekrani */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 1000;
+            transition: 1.2s ease-in-out;
         }
-        #btnBlue {
-            background-color: #007bff;
-            box-shadow: 0 0 15px #007bff;
+
+        .overlay button {
+            padding: 15px 40px; font-size: 1.2rem;
+            background: transparent; color: #00a2ff;
+            border: 2px solid #00a2ff; border-radius: 50px;
+            cursor: pointer; box-shadow: 0 0 20px #004b8d;
+            transition: 0.3s;
         }
-        #btnRed {
-            background-color: #ff3300;
-            box-shadow: 0 0 15px #ff3300;
+
+        .overlay button:hover {
+            background: #00a2ff; color: #fff;
+            box-shadow: 0 0 40px #00a2ff;
+        }
+
+        /* Asosiy konteyner - yozuvlar orasini ochish uchun padding qo'shildi */
+        .main-content {
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+            z-index: 10;
+        }
+
+        /* Typewriter matni uchun joy ajratish */
+        #typewriter {
+            font-size: 2rem;
+            min-height: 2.5em; /* Yozuvlar tushib ketmasligi uchun balandlik */
+            margin-bottom: 40px; /* Taymerdan uzoqlashtirish */
+            text-shadow: 0 0 15px #00a2ff;
+            line-height: 1.4;
+        }
+
+        /* Taymer stili */
+        .timer-box {
+            background: rgba(0, 31, 63, 0.6);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 162, 255, 0.4);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .timer-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            display: block;
+            color: #00a2ff;
+        }
+
+        #timer-display {
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        /* Effektlar */
+        .falling-rose {
+            position: absolute; top: -50px;
+            animation: fall linear forwards;
+            pointer-events: none;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(360deg); }
+        }
+
+        .sparkle {
+            position: absolute; pointer-events: none;
+            animation: explode 0.8s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
         }
     </style>
 </head>
-<body>
+<body onclick="createSparkle(event)">
 
-<div class="controls">
-    <button id="btnBlue">Ism Yozish</button>
-    <button id="btnRed">Olov Yoqish</button>
-</div>
+    <div class="bg-glow"></div>
 
-<canvas id="gameCanvas"></canvas>
+    <div class="overlay" id="overlay">
+        <button onclick="startApp()">Ochish 💙</button>
+    </div>
 
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    let particles = [];
-    const fireColors = ['#ff0000', '#ff5a00', '#ff9a00', '#ffce00', '#ffe808'];
-    let currentName = "DOLIYA";
-    let isFireModeActive = false; // Qizil tugma bosilganda yozishni boshlaydi
-
-    // Zarracha (Particle) obyekti
-    class Particle {
-        constructor(x, y) {
-            this.x = x;
-            this.y = y;
-            this.size = 3;
-            this.solid = true;
-            this.color = '#777'; // Boshlang'ich kulrang rang
-            this.vx = 0;
-            this.vy = 0;
-            this.gravity = 0.2;
-            this.alpha = 1;
-        }
-
-        update() {
-            if (!this.solid) {
-                this.x += this.vx;
-                this.vy += this.gravity;
-                this.y += this.vy;
-                this.alpha -= 0.015; // Sekin yo'qolib borishi
-            }
-        }
-
-        draw() {
-            if (this.alpha <= 0) return;
-            ctx.globalAlpha = Math.max(0, this.alpha);
-            ctx.fillStyle = this.color;
-            ctx.fillRect(this.x, this.y, this.size, this.size);
-            ctx.globalAlpha = 1;
-        }
-    }
-
-    // Yozuvni zarrachalarga aylantirish
-    function initParticles(text) {
-        particles = [];
-        const textCanvas = document.createElement('canvas');
-        const textCtx = textCanvas.getContext('2d');
-        textCanvas.width = canvas.width;
-        textCanvas.height = canvas.height;
-
-        // Ism uzunligiga qarab harf hajmini moslash
-        let fontSize = canvas.width / (text.length * 0.6);
-        if (fontSize > 150) fontSize = 150; 
+    <div class="main-content">
+        <div id="typewriter"></div>
         
-        textCtx.fillStyle = "white";
-        textCtx.font = `bold ${fontSize}px Arial`;
-        textCtx.textAlign = "center";
-        textCtx.textBaseline = "middle";
+        <div class="timer-box">
+            <span class="timer-title">Bizning baxtli kunlarimiz</span>
+            <div id="timer-display">Hisoblanmoqda...</div>
+        </div>
 
-        // Yozuvni gorizontal qilib o'rtaga joylashtiramiz
-        textCtx.fillText(text.toUpperCase(), textCanvas.width / 2, textCanvas.height / 2 - 50);
+        <p style="margin-top: 40px; opacity: 0.5; font-size: 0.8rem;">
+            Ekranga bosing ✨
+        </p>
+    </div>
 
-        const imgData = textCtx.getImageData(0, 0, textCanvas.width, textCanvas.height).data;
+    <audio id="bgMusic" loop>
+        <source src="musiqa.mp3" type="audio/mpeg">
+    </audio>
 
-        for (let y = 0; y < textCanvas.height; y += 4) {
-            for (let x = 0; x < textCanvas.width; x += 4) {
-                const index = (y * textCanvas.width + x) * 4;
-                const alpha = imgData[index + 3];
+    <script>
+        // 1. Tanishgan sana: 2025-yil, Iyul (6-indeks), 5-kun
+        const startDate = new Date(2025, 6, 5, 0, 0, 0);
+
+        function startApp() {
+            // Overlayni yopish
+            const overlay = document.getElementById('overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 1200);
+
+            // Musiqani yoqish
+            const music = document.getElementById('bgMusic');
+            music.play().catch(() => console.log("Musiqa uchun fayl topilmadi"));
+
+            // Funksiyalarni ishga tushirish
+            typeWriter("Sizni uchratgan kunim — hayotimning eng chiroyli sahifasi bo'lib qoladi... 💙");
+            setInterval(updateTimer, 1000);
+            setInterval(createRose, 500);
+        }
+
+        // Harfma-harf yozish funksiyasi
+        function typeWriter(text) {
+            let i = 0;
+            const container = document.getElementById("typewriter");
+            function type() {
+                if (i < text.length) {
+                    container.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, 70);
+                }
+            }
+            type();
+        }
+
+        // Taymerni yangilash
+        function updateTimer() {
+            const now = new Date();
+            const diff = now - startDate;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const mins = Math.floor((diff / 1000 / 60) % 60);
+            const secs = Math.floor((diff / 1000) % 60);
+
+            document.getElementById("timer-display").innerHTML = 
+                `<b>${days}</b> kun, <b>${hours}</b> soat, <br> <b>${mins}</b> daqiqa va <b>${secs}</b> soniya`;
+        }
+
+        // Ko'k atirgullar yomg'iri
+        function createRose() {
+            const rose = document.createElement('div');
+            rose.classList.add('falling-rose');
+            rose.innerHTML = '💙';
+            rose.style.left = Math.random() * 100 + 'vw';
+            rose.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            rose.style.animationDuration = (Math.random() * 3 + 4) + 's';
+            rose.style.opacity = Math.random();
+            document.body.appendChild(rose);
+            setTimeout(() => rose.remove(), 7000);
+        }
+
+        // Uchqunlar effekti
+        function createSparkle(e) {
+            for (let i = 0; i < 6; i++) {
+                const s = document.createElement('div');
+                s.classList.add('sparkle');
+                s.innerHTML = '✨';
+                s.style.left = e.clientX + 'px';
+                s.style.top = e.clientY + 'px';
                 
-                if (alpha > 128) {
-                    particles.push(new Particle(x, y));
-                }
+                const x = (Math.random() - 0.5) * 150;
+                const y = (Math.random() - 0.5) * 150;
+                s.style.setProperty('--x', x + 'px');
+                s.style.setProperty('--y', y + 'px');
+                
+                document.body.appendChild(s);
+                setTimeout(() => s.remove(), 800);
             }
         }
-    }
-
-    // Portlash (Olov) effekti x, y koordinatalarida
-    function explode(hitX, hitY) {
-        const explosionRadius = 40; // Teggan joyda qancha maydon yonishi
-
-        particles.forEach(p => {
-            if (p.solid) {
-                const dx = p.x - hitX;
-                const dy = p.y - hitY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < explosionRadius) {
-                    p.solid = false;
-                    p.color = fireColors[Math.floor(Math.random() * fireColors.length)];
-                    p.vx = (Math.random() - 0.5) * 8; // Ikki yonga sochilish
-                    p.vy = (Math.random() - 1) * 6;   // Tepaga qarab otilish va pastga tushish
-                }
-            }
-        });
-    }
-
-    // Sichqoncha yoki barmoq bilan teginganda
-    function handleTouch(e) {
-        if (!isFireModeActive) return; // Faqat qizil tugma yoqiq bo'lsa ishlaydi
-
-        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        explode(clientX, clientY);
-    }
-
-    // Ekran bosilganda yoki ustida harakatlantirilganda yonishi uchun
-    window.addEventListener('pointerdown', handleTouch);
-    window.addEventListener('pointermove', (e) => {
-        // Sichqoncha bosib turilgan bo'lsa yoki telefonda surilsa
-        if (e.buttons > 0 || e.touches) {
-            handleTouch(e);
-        }
-    });
-
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        initParticles(currentName);
-    });
-
-    // --- TUGMALAR UCHUN HODISALAR ---
-
-    // 1. Ko'k tugma (Ism o'zgartirish)
-    document.getElementById('btnBlue').addEventListener('click', () => {
-        const newName = prompt("Yangi ism kiriting:");
-        if (newName && newName.trim() !== "") {
-            currentName = newName.trim();
-            initParticles(currentName); // Zarrachalarni yangi ism bilan qayta chizish
-            isFireModeActive = false; // Yozuv yangilanganda olov rejimini o'chiramiz
-            document.getElementById('btnRed').innerText = "Olov Yoqish";
-            document.getElementById('btnRed').style.transform = "scale(1)";
-        }
-    });
-
-    // 2. Qizil tugma (Olov rejimini yoqish)
-    document.getElementById('btnRed').addEventListener('click', (e) => {
-        isFireModeActive = true;
-        e.target.innerText = "Yozuvni barmog'ingiz bilan kuydiring! 🔥";
-        e.target.style.transform = "scale(1.05)"; // Tugma biroz kattalashadi
-    });
-
-    // Asosiy o'yin tsikli
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        particles.forEach(p => {
-            p.update();
-            p.draw();
-        });
-
-        // O'chib ketgan zarrachalarni xotiradan tozalash
-        particles = particles.filter(p => p.alpha > 0);
-
-        requestAnimationFrame(animate);
-    }
-
-    // Ishga tushirish
-    initParticles(currentName);
-    animate();
-
-</script>
+    </script>
 </body>
 </html>

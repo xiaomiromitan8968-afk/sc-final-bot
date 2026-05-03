@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>3D Rubik Cube - Yig'ish Imkoniyati</title>
+    <title>3D Rubik Cube - Professional Control</title>
     <style>
-        body { margin: 0; background: #111; overflow: hidden; color: white; font-family: sans-serif; }
-        #ui { position: absolute; bottom: 20px; left: 20px; pointer-events: none; }
-        kbd { background: #333; padding: 2px 6px; border-radius: 4px; border: 1px solid #555; }
+        body { margin: 0; background: #0a0a0a; overflow: hidden; color: white; font-family: sans-serif; }
+        #ui { position: absolute; top: 10px; width: 100%; text-align: center; pointer-events: none; }
+        .hint { color: #888; font-size: 0.9em; }
     </style>
 </head>
 <body>
     <div id="ui">
-        <p>Aylantirish uchun tugmalarni bosing: <br>
-        <kbd>U</kbd> - Yuqori (Up) | <kbd>D</kbd> - Past (Down) | <kbd>L</kbd> - Chap (Left) | <kbd>R</kbd> - O'ng (Right)</p>
+        <b>Sichqoncha boshqaruvi:</b><br>
+        Chap tugma: Kamerani aylantirish | O'ng tugma: Qatlamni burish
     </div>
 
     <script type="importmap">
@@ -33,26 +33,32 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
+        // Chap tugma uchun OrbitControls (o'ng tugmani o'chirib qo'yamiz)
         const controls = new OrbitControls(camera, renderer.domElement);
+        controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: null };
         camera.position.set(5, 5, 5);
         controls.update();
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
         scene.add(ambientLight);
+        const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+        sun.position.set(10, 20, 10);
+        scene.add(sun);
 
-        // Kub bo'lakchalarini saqlash uchun massiv
         const pieces = [];
+        const cubeGroup = new THREE.Group();
+        scene.add(cubeGroup);
 
         function createCube() {
             const colors = [0xff0000, 0xffa500, 0xffffff, 0xffff00, 0x00ff00, 0x0000ff];
             for (let x = -1; x <= 1; x++) {
                 for (let y = -1; y <= 1; y++) {
                     for (let z = -1; z <= 1; z++) {
-                        const geometry = new THREE.BoxGeometry(0.95, 0.95, 0.95);
+                        const geometry = new THREE.BoxGeometry(0.92, 0.92, 0.92);
                         const materials = colors.map(c => new THREE.MeshLambertMaterial({ color: c }));
                         const mesh = new THREE.Mesh(geometry, materials);
                         mesh.position.set(x, y, z);
-                        scene.add(mesh);
+                        cubeGroup.add(mesh);
                         pieces.push(mesh);
                     }
                 }
@@ -60,41 +66,51 @@
         }
         createCube();
 
-        // Aylantirish mantiqi
-        function rotateLayer(axis, layerValue) {
-            const group = new THREE.Group();
-            scene.add(group);
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
 
-            // Tanlangan qatlamdagi bo'lakchalarni aniqlash
-            const layerPieces = pieces.filter(p => {
+        // O'ng tugma bosilganda qatlamni aniqlash va aylantirish
+        window.addEventListener('contextmenu', (e) => {
+            e.preventDefault(); // Standart menyuni o'chirish
+
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(pieces);
+
+            if (intersects.length > 0) {
+                const target = intersects[0].object;
                 const pos = new THREE.Vector3();
-                p.getWorldPosition(pos);
-                return Math.round(pos[axis]) === layerValue;
-            });
+                target.getWorldPosition(pos);
 
-            layerPieces.forEach(p => group.attach(p));
-
-            // Animatsiya (soddalashtirilgan)
-            const rotationAxis = new THREE.Vector3();
-            rotationAxis[axis] = 1;
-            group.rotateOnAxis(rotationAxis, Math.PI / 2);
-
-            // Guruhdan chiqarish va sahnaga qaytarish
-            group.updateMatrixWorld();
-            layerPieces.forEach(p => {
-                scene.attach(p);
-            });
-            scene.remove(group);
-        }
-
-        // Klaviatura hodisalari
-        window.addEventListener('keydown', (e) => {
-            const key = e.key.toUpperCase();
-            if (key === 'U') rotateLayer('y', 1);  // Yuqori qatlam
-            if (key === 'D') rotateLayer('y', -1); // Pastki qatlam
-            if (key === 'L') rotateLayer('x', -1); // Chap qatlam
-            if (key === 'R') rotateLayer('x', 1);  // O'ng qatlam
+                // Tasodifiy o'q bo'yicha aylantirish (Siz buni aniqroq qilishingiz mumkin)
+                const axes = ['x', 'y', 'z'];
+                const randomAxis = axes[Math.floor(Math.random() * 3)];
+                rotateLayer(randomAxis, Math.round(pos[randomAxis]));
+            }
         });
+
+        function rotateLayer(axis, layerValue) {
+            const tempGroup = new THREE.Group();
+            scene.add(tempGroup);
+
+            const layerPieces = pieces.filter(p => {
+                const worldPos = new THREE.Vector3();
+                p.getWorldPosition(worldPos);
+                return Math.round(worldPos[axis]) === layerValue;
+            });
+
+            layerPieces.forEach(p => tempGroup.attach(p));
+
+            const rotAxis = new THREE.Vector3();
+            rotAxis[axis] = 1;
+            tempGroup.rotateOnAxis(rotAxis, Math.PI / 2);
+
+            tempGroup.updateMatrixWorld();
+            layerPieces.forEach(p => cubeGroup.attach(p));
+            scene.remove(tempGroup);
+        }
 
         function animate() {
             requestAnimationFrame(animate);
@@ -102,6 +118,12 @@
             renderer.render(scene, camera);
         }
         animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
     </script>
 </body>
 </html>

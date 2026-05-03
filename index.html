@@ -1,17 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="uz">
 <head>
-    <title>3D Real World Simulation</title>
+    <meta charset="UTF-8">
+    <title>Ulkan 3D Ochiq Dunyo (Open World)</title>
     <style>
-        body { margin: 0; background: #87CEEB; overflow: hidden; font-family: sans-serif; }
-        #ui { position: absolute; bottom: 20px; left: 20px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; }
+        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: sans-serif; }
+        #info {
+            position: absolute; top: 10px; width: 100%; text-align: center;
+            color: white; background: rgba(0,0,0,0.5); padding: 10px 0; z-index: 100;
+        }
+        #crosshair {
+            position: absolute; top: 50%; left: 50%; width: 6px; height: 6px;
+            background: white; border-radius: 50%; transform: translate(-50%, -50%);
+        }
     </style>
 </head>
 <body>
-    <div id="ui">
-        <b>Boshqaruv:</b> W,A,S,D - Yurish | Sichqoncha - Atrofga qarash<br>
-        <i>Dunyoga xush kelibsiz! Bu yerda boshqa personajlar ham bor.</i>
-    </div>
+    <div id="info">Sichqonchani bosing va W,A,S,D tugmalari bilan ulkan tog'larda sayr qiling</div>
+    <div id="crosshair"></div>
 
 <script type="importmap">
   {
@@ -26,104 +32,171 @@
     import * as THREE from 'three';
     import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-    // 1. SAHNA VA KAMERA
+    // 1. Sahna va Atmosfera
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB); // Moviy osmon
-    scene.fog = new THREE.Fog(0x87CEEB, 0, 50);
+    scene.background = new THREE.Color(0x87CEEB);
+    scene.fog = new THREE.FogExp2(0x87CEEB, 0.005); // Tuman yordamida uzoq masofalar realistik ko'rinadi
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 2000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true; // Soyalar yoqildi
+    renderer.shadowMap.enabled = true;
     document.body.appendChild(renderer.domElement);
 
     const controls = new PointerLockControls(camera, document.body);
     document.body.addEventListener('click', () => controls.lock());
 
-    // 2. YORUG'LIK (Realizm asosi)
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
+    // 2. Yorug'lik (Quyosh va Osmon nuri)
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+    hemiLight.position.set(0, 500, 0);
     scene.add(hemiLight);
 
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1);
-    sunLight.position.set(10, 20, 10);
-    sunLight.castShadow = true;
-    scene.add(sunLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(500, 1000, 500);
+    dirLight.castShadow = true;
+    dirLight.shadow.camera.top = 200;
+    dirLight.shadow.camera.bottom = -200;
+    dirLight.shadow.camera.left = -200;
+    dirLight.shadow.camera.right = 200;
+    dirLight.shadow.camera.near = 0.1;
+    dirLight.shadow.camera.far = 2000;
+    scene.add(dirLight);
 
-    // 3. YER (Grass - O'tloq)
-    const floorGeo = new THREE.PlaneGeometry(100, 100);
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x2d5e1e });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    scene.add(floor);
+    // 3. Ulkan Tog'li Relef (Procedural Generation)
+    const worldSize = 1000;
+    const terrainGeo = new THREE.PlaneGeometry(worldSize, worldSize, 150, 150);
+    terrainGeo.rotateX(-Math.PI / 2);
 
-    // 4. PERSONAJ YARATISH (NPC)
-    const npcs = [];
-    function createPerson(x, z, color) {
-        const person = new THREE.Group();
+    const positions = terrainGeo.attributes.position;
+    for (let i = 0; i < positions.count; i++) {
+        let x = positions.getX(i);
+        let z = positions.getZ(i);
         
-        // Tana
-        const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.5, 4, 8), new THREE.MeshStandardMaterial({color: color}));
-        body.position.y = 0.75;
-        body.castShadow = true;
-        person.add(body);
+        // Matematik funksiyalar yordamida tog' va tekisliklar hosil qilish
+        let y = (Math.sin(x * 0.02) * 10) + (Math.cos(z * 0.02) * 10);
+        y += (Math.sin(x * 0.005) * 30) + (Math.cos(z * 0.005) * 30); // Katta tog'lar
+        
+        positions.setY(i, y);
+    }
+    terrainGeo.computeVertexNormals();
 
-        // Bosh
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), new THREE.MeshStandardMaterial({color: 0xffdbac}));
-        head.position.y = 1.3;
-        head.castShadow = true;
-        person.add(head);
+    const terrainMat = new THREE.MeshStandardMaterial({ 
+        color: 0x3b5e2b, // To'q yashil
+        roughness: 0.8,
+        flatShading: true 
+    });
+    const terrain = new THREE.Mesh(terrainGeo, terrainMat);
+    terrain.receiveShadow = true;
+    scene.add(terrain);
 
-        person.position.set(x, 0, z);
-        scene.add(person);
-        npcs.push({ mesh: person, speed: Math.random() * 0.02 + 0.01 });
+    // 4. Okean / Dengiz sathi
+    const waterGeo = new THREE.PlaneGeometry(worldSize, worldSize);
+    const waterMat = new THREE.MeshStandardMaterial({ 
+        color: 0x1e90ff, 
+        transparent: true, 
+        opacity: 0.8,
+        roughness: 0.1
+    });
+    const water = new THREE.Mesh(waterGeo, waterMat);
+    water.rotation.x = -Math.PI / 2;
+    water.position.y = -5; // Suv sathi
+    scene.add(water);
+
+    // 5. Dunyoga ob'ektlar (masalan, ulkan qoyalar) tarqatish
+    const boxGeo = new THREE.BoxGeometry(4, 10, 4);
+    const boxMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
+    
+    for(let i=0; i<200; i++) {
+        const x = (Math.random() - 0.5) * worldSize;
+        const z = (Math.random() - 0.5) * worldSize;
+        
+        // Y o'qini relefning balandligiga moslash
+        let y = (Math.sin(x * 0.02) * 10) + (Math.cos(z * 0.02) * 10) + (Math.sin(x * 0.005) * 30) + (Math.cos(z * 0.005) * 30);
+        
+        if (y > 0) { // Suv ostiga qoya qo'ymaymiz
+            const rock = new THREE.Mesh(boxGeo, boxMat);
+            rock.position.set(x, y + 5, z);
+            rock.castShadow = true;
+            rock.rotation.y = Math.random() * Math.PI;
+            scene.add(rock);
+        }
     }
 
-    // Dunyoga 10 ta turli xil odamlarni qo'shamiz
-    for(let i=0; i<15; i++) {
-        createPerson(Math.random()*40-20, Math.random()*40-20, Math.random() * 0xffffff);
-    }
+    // 6. Fizika va Harakat (Kamera yerdan uzilmasligi uchun)
+    const velocity = new THREE.Vector3();
+    const direction = new THREE.Vector3();
+    let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+    let canJump = false;
 
-    // 5. DARAXTLAR
-    function createTree(x, z) {
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1), new THREE.MeshStandardMaterial({color: 0x4d2902}));
-        const leaves = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.5, 8), new THREE.MeshStandardMaterial({color: 0x1a4a1a}));
-        trunk.position.set(x, 0.5, z);
-        leaves.position.set(x, 1.5, z);
-        trunk.castShadow = true;
-        scene.add(trunk, leaves);
-    }
+    document.addEventListener('keydown', (e) => {
+        if(e.code === 'KeyW') moveForward = true;
+        if(e.code === 'KeyS') moveBackward = true;
+        if(e.code === 'KeyA') moveLeft = true;
+        if(e.code === 'KeyD') moveRight = true;
+        if(e.code === 'Space' && canJump) velocity.y += 20; // Sakrash
+    });
+    document.addEventListener('keyup', (e) => {
+        if(e.code === 'KeyW') moveForward = false;
+        if(e.code === 'KeyS') moveBackward = false;
+        if(e.code === 'KeyA') moveLeft = false;
+        if(e.code === 'KeyD') moveRight = false;
+    });
 
-    for(let i=0; i<30; i++) {
-        createTree(Math.random()*60-30, Math.random()*60-30);
-    }
+    const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0), 0, 10);
+    camera.position.set(0, 50, 0); // Boshlang'ich balandlik
 
-    // 6. HARAKAT
-    let keys = {};
-    document.addEventListener('keydown', (e) => keys[e.code] = true);
-    document.addEventListener('keyup', (e) => keys[e.code] = false);
-
-    camera.position.set(0, 1.6, 5);
+    let prevTime = performance.now();
 
     function animate() {
         requestAnimationFrame(animate);
 
-        if (controls.isLocked) {
-            // O'yinchi harakati
-            const speed = 0.1;
-            if(keys['KeyW']) controls.moveForward(speed);
-            if(keys['KeyS']) controls.moveForward(-speed);
-            if(keys['KeyA']) controls.moveRight(-speed);
-            if(keys['KeyD']) controls.moveRight(speed);
+        const time = performance.now();
+        const delta = (time - prevTime) / 1000;
 
-            // NPC harakati (Odamlar o'zicha yurib yuradi)
-            npcs.forEach(npc => {
-                npc.mesh.position.z += npc.speed;
-                if(npc.mesh.position.z > 20) npc.mesh.position.z = -20;
-            });
+        if (controls.isLocked) {
+            // Yerni tekshirish (Gravitatsiya)
+            raycaster.ray.origin.copy(controls.getObject().position);
+            raycaster.ray.origin.y += 1;
+            
+            const intersections = raycaster.intersectObject(terrain);
+            const onObject = intersections.length > 0;
+
+            velocity.x -= velocity.x * 5.0 * delta;
+            velocity.z -= velocity.z * 5.0 * delta;
+            velocity.y -= 9.8 * 10.0 * delta; // Tortishish kuchi
+
+            direction.z = Number(moveForward) - Number(moveBackward);
+            direction.x = Number(moveRight) - Number(moveLeft);
+            direction.normalize();
+
+            const speed = 100.0;
+            if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
+            if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
+
+            if (onObject === true) {
+                velocity.y = Math.max(0, velocity.y);
+                canJump = true;
+                
+                // Kamerani yer sathiga to'g'rilash (Tog'ga chiqqanda tepaga ko'tariladi)
+                const groundHeight = intersections[0].point.y;
+                if (camera.position.y < groundHeight + 2) {
+                    camera.position.y = groundHeight + 2;
+                }
+            }
+
+            controls.moveRight(-velocity.x * delta);
+            controls.moveForward(-velocity.z * delta);
+            controls.getObject().position.y += (velocity.y * delta);
+
+            if (controls.getObject().position.y < -4) {
+                velocity.y = 0;
+                controls.getObject().position.y = -4; // Suv ustida suzish
+                canJump = true;
+            }
         }
 
         renderer.render(scene, camera);
+        prevTime = time;
     }
     animate();
 

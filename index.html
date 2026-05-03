@@ -1,90 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html lang="uz">
 <head>
-    <title>3D Runner Game</title>
+    <meta charset="UTF-8">
+    <title>3D Yuguruvchi (Block Runner)</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
-        #score { position: absolute; top: 20px; width: 100%; text-align: center; color: white; font-size: 30px; }
+        body { margin: 0; overflow: hidden; background: #111; font-family: sans-serif; }
+        #score { 
+            position: absolute; 
+            top: 20px; 
+            width: 100%; 
+            text-align: center; 
+            color: #fff; 
+            font-size: 36px; 
+            font-weight: bold; 
+            z-index: 10; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body>
-    <div id="score">Score: 0</div>
-    <script type="module">
-        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+    <div id="score">Ball: 0</div>
 
-        // 1. Sahnani sozlash
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        // 1. Sahnani tayyorlash
         const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0x111111, 10, 50); // Orqa fonda tuman effekti
+
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // 2. Chiroq (Soya va ranglar uchun)
+        // 2. Chiroqlar
         const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(0, 5, 5).addTo(scene);
+        light.position.set(0, 10, 10);
+        scene.add(light);
         scene.add(new THREE.AmbientLight(0x404040));
 
-        // 3. O'yinchi (Kichik kub)
-        const playerGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
-        const playerMat = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+        // 3. O'yinchi (Yashil kub)
+        const playerGeo = new THREE.BoxGeometry(1, 1, 1);
+        const playerMat = new THREE.MeshPhongMaterial({ color: 0x00ffcc });
         const player = new THREE.Mesh(playerGeo, playerMat);
-        player.position.y = 0.3;
+        player.position.y = 0.5;
         scene.add(player);
 
-        // 4. Yo'l (Zamin)
-        const floorGeo = new THREE.PlaneGeometry(10, 1000);
+        // 4. Zamin (Yo'l)
+        const floorGeo = new THREE.PlaneGeometry(14, 200);
         const floorMat = new THREE.MeshPhongMaterial({ color: 0x222222 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
+        floor.position.z = -50;
         scene.add(floor);
 
-        camera.position.set(0, 2, 5);
+        // Kamera joylashuvi
+        camera.position.set(0, 4, 6);
         camera.lookAt(player.position);
 
-        // 5. To'siqlar
+        // 5. To'siqlar yaratish
         let obstacles = [];
         function spawnObstacle() {
-            const obsGeo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
-            const obsMat = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+            const obsGeo = new THREE.BoxGeometry(1, 1, 1);
+            const obsMat = new THREE.MeshPhongMaterial({ color: 0xff3366 });
             const obs = new THREE.Mesh(obsGeo, obsMat);
-            obs.position.set((Math.random() - 0.5) * 8, 0.4, -50);
+            
+            // Tasodifiy qatorlar: chap, o'rta yoki o'ng (-4, 0, 4)
+            const lanes = [-4, 0, 4];
+            const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
+            
+            obs.position.set(randomLane, 0.5, -60);
             scene.add(obs);
             obstacles.push(obs);
         }
-        setInterval(spawnObstacle, 1000);
+        setInterval(spawnObstacle, 800); // Har 0.8 soniyada yangi to'siq
 
-        // 6. Boshqaruv
+        // 6. Boshqaruv (Klaviatura)
         let targetX = 0;
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') targetX -= 1.5;
-            if (e.key === 'ArrowRight') targetX += 1.5;
+            if (e.key === 'ArrowLeft' && targetX > -4) targetX -= 4;
+            if (e.key === 'ArrowRight' && targetX < 4) targetX += 4;
         });
 
-        // 7. O'yin aylanishi (Animation Loop)
+        // 7. O'yin jarayoni
         let score = 0;
+        let isGameOver = false;
+
         function animate() {
+            if (isGameOver) return;
             requestAnimationFrame(animate);
 
-            // O'yinchi harakati
-            player.position.x += (targetX - player.position.x) * 0.1;
-            
-            // To'siqlarni harakatlantirish
+            // O'yinchining silliq harakati
+            player.position.x += (targetX - player.position.x) * 0.15;
+
+            // To'siqlarni o'zimizga qarab harakatlantirish
             obstacles.forEach((obs, index) => {
-                obs.position.z += 0.5; // Tezlik
+                obs.position.z += 0.8; // O'yin tezligi
 
                 // To'qnashuvni tekshirish
                 const dist = player.position.distanceTo(obs.position);
-                if (dist < 0.8) {
-                    alert("O'yin tugadi! Score: " + score);
-                    location.reload();
+                if (dist < 1.0) {
+                    isGameOver = true;
+                    setTimeout(() => {
+                        alert("O'yin tugadi! Yig'ilgan ball: " + score);
+                        location.reload();
+                    }, 50);
                 }
 
                 // O'tib ketgan to'siqlarni o'chirish
-                if (obs.position.z > 5) {
+                if (obs.position.z > 8) {
                     scene.remove(obs);
                     obstacles.splice(index, 1);
-                    score++;
-                    document.getElementById('score').innerText = "Score: " + score;
+                    score += 10; // Har bir o'tilgan to'siq uchun 10 ball
+                    document.getElementById('score').innerText = "Ball: " + score;
                 }
             });
 
@@ -92,7 +120,7 @@
         }
         animate();
 
-        // Ekran o'zgarganda moslashish
+        // Ekran o'lchami o'zgarganda to'g'irlash
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();

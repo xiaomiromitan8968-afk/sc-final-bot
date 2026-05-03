@@ -1,219 +1,108 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>3D Rubik Cube - Professional Interaktiv Boshqaruv</title>
+    <title>3D Labyrinth Dunyo</title>
     <style>
-        body { margin: 0; background: #0a0a0a; overflow: hidden; color: white; font-family: sans-serif; }
-        #ui { position: absolute; top: 10px; width: 100%; text-align: center; pointer-events: none; }
-        .hint { color: #888; font-size: 0.9em; }
+        body { margin: 0; background: #000; overflow: hidden; }
+        canvas { display: block; }
     </style>
 </head>
 <body>
-    <div id="ui">
-        <b>Sichqoncha boshqaruvi:</b><br>
-        Chap tugma: Kamerani aylantirish | O'ng tugma: Qatlamni silliq burish<br>
-        <span class="hint">(S SMC mantiqi koordinata tizimiga asoslangan)</span>
-    </div>
 
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-                "tween": "https://unpkg.com/@tweenjs/tween.js@21.0.0/dist/tween.esm.js"
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+    }
+  }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+
+    // 1. Asosiy sahna sozlamalari (Scene setup)
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a1a); // To'q ko'k osmon
+    
+    // Kamerani labyrinth ustidan ko'radigan qilib o'rnatamiz
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(5, 10, 5); // Yuqoriga va biroz orqaga
+    camera.lookAt(5, 0, 5); // Markazga qaragan
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // 2. Yorug'lik (Lighting)
+    // Umumiy atrof-muhit yorug'ligi
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    // Nuqtali yorug'lik (labyrinth ichida soya berish uchun)
+    const pointLight = new THREE.PointLight(0xffffff, 1);
+    pointLight.position.set(5, 5, 5);
+    scene.add(pointLight);
+
+    // 3. Yer (Floor)
+    const floorGeometry = new THREE.PlaneGeometry(20, 20); // 20x20 o'lchamli yer
+    const floorMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 }); // To'q kulrang
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = -Math.PI / 2; // Yerni gorizontal qilish
+    scene.add(floor);
+
+    // 4. Labyrinth mantiqi (The Maze Logic - Grid Array)
+    // 0 = Bo'sh yo'l (Passage), 1 = Devor (Wall)
+    const mazeGrid = [
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 1, 1, 0, 1, 1, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+        [1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
+        [1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+        [1, 0, 1, 1, 0, 1, 1, 1, 1, 1],
+        [1, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 1, 1, 1, 1, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    ];
+
+    // 5. Devorlarni yaratish (Building walls based on the grid)
+    const wallGeometry = new THREE.BoxGeometry(1, 1, 1); // 1x1x1 o'lchamli devor bloklari
+    const wallMaterial = new THREE.MeshLambertMaterial({ color: 0x880000 }); // To'q qizil
+
+    const wallsGroup = new THREE.Group(); // Barcha devorlarni bitta guruhga olamiz
+
+    // Massiv bo'ylab aylanib chiqish (row, col - qator, ustun)
+    mazeGrid.forEach((row, rowIndex) => {
+        row.forEach((cell, colIndex) => {
+            if (cell === 1) { // Agar 1 bo'lsa, devor yaratamiz
+                const wallBlock = new THREE.Mesh(wallGeometry, wallMaterial);
+                
+                // Devorni massiv koordinatalari bo'yicha 3D fazoga joylashtirish
+                wallBlock.position.x = colIndex; // X o'qi - ustun
+                wallBlock.position.y = 0.5; // Y o'qi - yarim balandlikda (yer ustida turishi uchun)
+                wallBlock.position.z = rowIndex; // Z o'qi - qator
+                
+                wallsGroup.add(wallBlock);
             }
-        }
-    </script>
+        });
+    });
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import * as TWEEN from 'tween';
+    scene.add(wallsGroup); // Guruhni sahnaga qo'shish
 
-        // 1. Sahna
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+    // 6. Animatsiya sikli (Animation loop)
+    function animate() {
+        requestAnimationFrame(animate);
+        // Oddiy sahna, hozircha animatsiya yo'q
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    // Oyna o'lchami o'zgarganda moslashish
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        // Chap tugma uchun OrbitControls (o'ng tugmani o'chirib qo'yamiz)
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: null };
-        camera.position.set(5, 5, 5);
-        controls.update();
-
-        // 2. Yorug'lik
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-        scene.add(ambientLight);
-        const pointLight = new THREE.PointLight(0xffffff, 0.8);
-        pointLight.position.set(10, 20, 10);
-        scene.add(pointLight);
-
-        // 3. Kub Klassi (Rasm mantiqi)
-        class RubiksCube {
-            constructor() {
-                this.holder = new THREE.Object3D(); // Asosiy konteyner
-                this.object = new THREE.Object3D(); // Kub bo'lakchalari konteyneri
-                this.animator = new THREE.Object3D(); // Animatsiya uchun konteyner
-
-                // Rasmda ko'rsatilgan geometrik sozlamalar (RoundedBoxGeometry simulyatsiyasi)
-                this.geometrySettings = {
-                    pieceCornerRadius: 0.12, // Burchak yumaloqligi
-                    edgeScale: 0.92,        // Bo'lakchalar o'lchami (gaplar uchun)
-                };
-
-                this.pieces = []; // 27 ta bo'lakchalarni saqlash massivi
-                this.generatePieces(); // Kub bo'lakchalarini yaratish
-
-                // Ierarxiyani yig'ish: holder -> animator -> object
-                this.holder.add(this.animator);
-                this.animator.add(this.object);
-                scene.add(this.holder);
-            }
-
-            // 27 ta bo'lakchalarni yaratish (SMC mantiqi koordinatalari)
-            generatePieces() {
-                const colors = [
-                    0xffffff, // Yuqori (Oq) -> +Y
-                    0xffff00, // Past (Sariq) -> -Y
-                    0xff0000, // O'ng (Qizil) -> +X
-                    0xffa500, // Chap (To'q sariq) -> -X
-                    0x00ff00, // Oldi (Yashil) -> +Z
-                    0x0000ff  // Orqa (Ko'k) -> -Z
-                ];
-
-                // 3x3x3 bo'lakchalarni yaratish va joylashtirish
-                for (let x = -1; x <= 1; x++) {
-                    for (let y = -1; y <= 1; y++) {
-                        for (let z = -1; z <= 1; z++) {
-                            // RoundedBoxGeometry yordamchi moduldagi geometry parametrlariga yaqin ko'rinish
-                            const geometry = new THREE.BoxGeometry(
-                                this.geometrySettings.edgeScale,
-                                this.geometrySettings.edgeScale,
-                                this.geometrySettings.edgeScale
-                            );
-                            const materials = colors.map(color => new THREE.MeshLambertMaterial({ color }));
-                            const pieceMesh = new THREE.Mesh(geometry, materials);
-                            pieceMesh.position.set(x, y, z);
-                            
-                            // SMC koordinatalarini saqlash
-                            pieceMesh.userData.cubeCoords = { x, y, z };
-                            
-                            this.object.add(pieceMesh);
-                            this.pieces.push(pieceMesh);
-                        }
-                    }
-                }
-            }
-
-            // O'ng tugma bosilganda qatlamni aniqlash va aylantirish
-            handleRightClick(e) {
-                const mouse = new THREE.Vector2();
-                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-                const raycaster = new THREE.Raycaster();
-                raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects(this.pieces);
-
-                if (intersects.length > 0) {
-                    const targetPiece = intersects[0].object;
-                    const coords = targetPiece.userData.cubeCoords;
-
-                    // Tasodifiy o'q bo'yicha aylantirish (S SMC koordinatalari)
-                    const axes = ['x', 'y', 'z'];
-                    const randomAxis = axes[Math.floor(Math.random() * 3)];
-                    const layerValue = coords[randomAxis];
-
-                    this.rotateLayer(randomAxis, layerValue);
-                }
-            }
-
-            // Qatlamni silliq aylantirish (Tween.js mantiqi)
-            rotateLayer(axis, layerValue) {
-                const isRotating = TWEEN.getAll().length > 0;
-                if (isRotating) return; // Animatsiya davomida boshqa qatlamni burishni cheklash
-
-                // Tanlangan qatlamdagi bo'lakchalarni aniqlash
-                const layerPieces = this.pieces.filter(p => p.userData.cubeCoords[axis] === layerValue);
-
-                // Bo'lakchalarni vaqtincha animator guruhiga olish
-                layerPieces.forEach(p => this.animator.attach(p));
-
-                // Tween.js animatsiyasi
-                const rotationAmount = Math.PI / 2; // 90 daraja
-                const startRotation = this.animator.rotation[axis];
-                const endRotation = startRotation + rotationAmount;
-
-                const tween = new TWEEN.Tween({ rot: startRotation })
-                    .to({ rot: endRotation }, 300) // 300ms animatsiya vaqti
-                    .easing(TWEEN.Easing.Quadratic.InOut)
-                    .onUpdate((obj) => {
-                        this.animator.rotation[axis] = obj.rot;
-                    })
-                    .onComplete(() => {
-                        // Animatsiyadan keyin koordinatalarni yangilash
-                        this.updatePieceCoords(layerPieces, axis);
-                        
-                        // Bo'lakchalarni animator guruhidan object guruhiga qaytarish
-                        this.animator.updateMatrixWorld();
-                        layerPieces.forEach(p => this.object.attach(p));
-                        
-                        // Animator guruhini boshlang'ich holatiga qaytarish
-                        this.animator.rotation.set(0, 0, 0);
-                        this.holder.updateMatrixWorld();
-                    });
-
-                tween.start();
-            }
-
-            // SMC koordinatalarini yangilash mantiqi
-            updatePieceCoords(piecesInLayer, axisOfRotation) {
-                piecesInLayer.forEach(piece => {
-                    const oldCoords = piece.userData.cubeCoords;
-                    let newCoords = { ...oldCoords };
-
-                    if (axisOfRotation === 'x') {
-                        newCoords.y = -oldCoords.z;
-                        newCoords.z = oldCoords.y;
-                    } else if (axisOfRotation === 'y') {
-                        newCoords.x = -oldCoords.z;
-                        newCoords.z = oldCoords.x;
-                    } else if (axisOfRotation === 'z') {
-                        newCoords.x = oldCoords.y;
-                        newCoords.y = -oldCoords.x;
-                    }
-                    
-                    // SMC koordinatalarini yangilash
-                    piece.userData.cubeCoords = newCoords;
-                });
-            }
-        }
-
-        const cube = new RubiksCube();
-
-        // 4. Sichqoncha Boshqaruvi
-        window.addEventListener('contextmenu', (e) => {
-            e.preventDefault(); // Standart menyuni o'chirish
-            cube.handleRightClick(e); // O'ng tugma mantiqini ishga tushirish
-        });
-
-        // 5. Animatsiya sikli
-        function animate() {
-            requestAnimationFrame(animate);
-            TWEEN.update(); // Tween.js animatsiyalarini yangilash
-            controls.update(); // OrbitControls-ni yangilash
-            renderer.render(scene, camera); // Sahnani render qilish
-        }
-        animate();
-
-        // Oyna o'lchami o'zgarganda moslashish
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
+    });
+</script>
 </body>
 </html>

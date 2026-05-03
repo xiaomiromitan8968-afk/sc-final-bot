@@ -3,119 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SC_ MALIKOV - Trade Art</title>
+    <title>Luxury Car 3D Showroom</title>
     <style>
-        body { margin: 0; background: #050505; overflow: hidden; font-family: 'Courier New', monospace; }
-        canvas { display: block; }
-        #ui {
-            position: absolute; top: 20px; left: 20px; color: #fff;
-            pointer-events: none; text-shadow: 0 0 10px rgba(0,255,255,0.5);
+        body { margin: 0; background: #050505; overflow: hidden; font-family: sans-serif; }
+        #ui { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 10px; z-index: 10; }
+        button { 
+            padding: 12px; border: 1px solid #fff; background: rgba(255,255,255,0.1); 
+            color: white; border-radius: 5px; cursor: pointer;
         }
-        .info { font-size: 12px; opacity: 0.7; }
+        #info { position: absolute; top: 20px; width: 100%; text-align: center; color: #555; pointer-events: none; }
     </style>
 </head>
 <body>
 
+    <div id="info">360° Aylantirish uchun suring</div>
     <div id="ui">
-        <div>SESSION: <span id="trend">NEUTRAL</span></div>
-        <div class="info">SMC Art Generator v1.0</div>
+        <button onclick="changeColor(0xff0000)">Qizil</button>
+        <button onclick="changeColor(0x00ffcc)">Neon Blue</button>
+        <button onclick="changeColor(0xffd700)">Oltin</button>
+        <button onclick="toggleLights()">Chiroqlar</button>
     </div>
-    <canvas id="tradeCanvas"></canvas>
 
-<script>
-    const canvas = document.getElementById('tradeCanvas');
-    const ctx = canvas.getContext('2d');
-    const trendEl = document.getElementById('trend');
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    <script>
+        let scene, camera, renderer, carBody, headlights = [];
+        let isLightOn = false;
 
-    let points = [];
-    let isPressing = false;
-    let priceY = canvas.height / 2;
-    let priceX = 0;
-    let fibZones = [0.618, 0.786, 0.5]; // OTE (Optimal Trade Entry) zonalari
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050505);
 
-    class TradeElement {
-        constructor(x, y, type) {
-            this.x = x;
-            this.y = y;
-            this.type = type; // 'up' yoki 'down'
-            this.size = Math.random() * 20 + 5;
-            this.opacity = 1;
-            this.color = type === 'up' ? `0, 255, 150` : `180, 50, 255`;
-        }
-        draw() {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = `rgb(${this.color})`;
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 2, 5);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Chiroqlar (Atmosfera uchun)
+            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambient);
+
+            const pointLight = new THREE.PointLight(0xffffff, 1);
+            pointLight.position.set(5, 5, 5);
+            scene.add(pointLight);
+
+            // MASHINA MODELINI QURAMIZ (Prototip)
+            const carGroup = new THREE.Group();
+
+            // Korpus (Body)
+            const bodyGeo = new THREE.BoxGeometry(2.5, 0.6, 1.2);
+            const bodyMat = new THREE.MeshPhongMaterial({ color: 0x00ffcc, shininess: 100 });
+            carBody = new THREE.Mesh(bodyGeo, bodyMat);
+            carGroup.add(carBody);
+
+            // Kabina (Top)
+            const topGeo = new THREE.BoxGeometry(1.2, 0.4, 1.0);
+            const top = new THREE.Mesh(topGeo, bodyMat);
+            top.position.set(-0.2, 0.5, 0);
+            carGroup.add(top);
+
+            // G'ildiraklar (Wheels)
+            const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 32);
+            const wheelMat = new THREE.MeshPhongMaterial({ color: 0x333333 });
             
-            if (this.type === 'up') {
-                // Yashil neon chiziqlar
-                ctx.strokeStyle = `rgba(${this.color}, ${this.opacity})`;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(this.x, this.y);
-                ctx.lineTo(this.x - 20, this.y + 20);
-                ctx.stroke();
-            } else {
-                // Binafsha tuman (shakllar)
-                ctx.fillStyle = `rgba(${this.color}, ${this.opacity * 0.3})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
+            const wheelPositions = [
+                [0.8, -0.3, 0.6], [0.8, -0.3, -0.6],
+                [-0.8, -0.3, 0.6], [-0.8, -0.3, -0.6]
+            ];
+
+            wheelPositions.forEach(pos => {
+                const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+                wheel.rotation.x = Math.PI / 2;
+                wheel.position.set(...pos);
+                carGroup.add(wheel);
+            });
+
+            // Chiroqlar (Headlights)
+            const lightGeo = new THREE.CircleGeometry(0.15, 16);
+            const lightMat = new THREE.MeshBasicMaterial({ color: 0x111111 }); // O'chiq holat
+            
+            [ [1.26, 0, 0.4], [1.26, 0, -0.4] ].forEach(pos => {
+                const light = new THREE.Mesh(lightGeo, lightMat.clone());
+                light.rotation.y = Math.PI / 2;
+                light.position.set(...pos);
+                headlights.push(light);
+                carGroup.add(light);
+            });
+
+            scene.add(carGroup);
+            this.carGroup = carGroup;
+
+            animate();
+        }
+
+        // Rangni o'zgartirish
+        function changeColor(hex) {
+            carBody.material.color.setHex(hex);
+            carBody.parent.children[1].material.color.setHex(hex); // Kabina rangi
+        }
+
+        // Chiroqlarni yoqish
+        function toggleLights() {
+            isLightOn = !isLightOn;
+            headlights.forEach(light => {
+                light.material.color.setHex(isLightOn ? 0xffffaa : 0x111111);
+            });
+        }
+
+        // Boshqaruv (Touch & Mouse)
+        let isDragging = false;
+        let previousMouseX = 0;
+
+        window.addEventListener('touchstart', (e) => { isDragging = true; previousMouseX = e.touches[0].clientX; });
+        window.addEventListener('touchend', () => isDragging = false);
+        window.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                const deltaX = e.touches[0].clientX - previousMouseX;
+                carGroup.rotation.y += deltaX * 0.01;
+                previousMouseX = e.touches[0].clientX;
             }
-        }
-    }
-
-    function generateFibNode(x, y) {
-        // Fibonacci zonalarida "Order Block" kristallarini chizish
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(x - 30, y - 30, 60, 60);
-        ctx.font = '10px Arial';
-        ctx.fillStyle = '#fff';
-        ctx.fillText("OB ZONE", x + 35, y);
-    }
-
-    function animate() {
-        // Ekranni to'liq tozalamaymiz, "iz" qolishi uchun
-        ctx.fillStyle = 'rgba(5, 5, 5, 0.05)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        if (isPressing) {
-            priceX += 3;
-            let change = (Math.random() - 0.4) * 20; // Narx yuqoriga moyil
-            priceY -= change;
-            
-            let type = change > 0 ? 'up' : 'down';
-            trendEl.innerText = type === 'up' ? "BULLISH (BOS)" : "RETRACTION";
-            trendEl.style.color = type === 'up' ? "#00ff96" : "#b432ff";
-
-            points.push(new TradeElement(priceX, priceY, type));
-
-            // Fibonacci simulyatsiyasi
-            if (Math.random() > 0.98) generateFibNode(priceX, priceY);
-        }
-
-        points.forEach((p, i) => {
-            p.draw();
-            p.opacity -= 0.005;
-            if (p.opacity <= 0) points.splice(i, 1);
         });
 
-        // Agar narx ekrandan chiqsa, boshiga qaytadi
-        if (priceX > canvas.width) priceX = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
 
-        requestAnimationFrame(animate);
-    }
+        init();
 
-    window.addEventListener('touchstart', () => isPressing = true);
-    window.addEventListener('touchend', () => isPressing = false);
-    // Sichqoncha uchun ham (agar kompyuterda ko'rsangiz)
-    window.addEventListener('mousedown', () => isPressing = true);
-    window.addEventListener('mouseup', () => isPressing = false);
-
-    animate();
-</script>
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
 </html>

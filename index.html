@@ -1,26 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>3D Maze World - FPS Mode</title>
+    <title>3D Maze Horror - M416 Edition</title>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; }
         #instructions {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: white; text-align: center; cursor: pointer; background: rgba(0,0,0,0.7);
-            padding: 20px; border: 2px solid #555;
+            color: #00ff00; text-align: center; cursor: pointer; background: rgba(0,0,0,0.9);
+            padding: 30px; border: 2px solid #00ff00; z-index: 10;
         }
+        #hud { position: absolute; bottom: 20px; left: 20px; color: white; font-size: 20px; }
         #crosshair {
-            position: absolute; top: 50%; left: 50%; width: 10px; height: 10px;
-            border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%);
+            position: absolute; top: 50%; left: 50%; width: 12px; height: 12px;
+            border: 2px solid #00ff00; border-radius: 50%; transform: translate(-50%, -50%);
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
     <div id="instructions">
-        <h1>O'yinni boshlash</h1>
-        <p>Sichqonchani bosing (W, A, S, D bilan yurasiz)</p>
+        <h1>M416 OPERATSIYASI</h1>
+        <p>Chap tugma: O'q uzish | W,A,S,D: Yurish</p>
+        <p><b>BOSHLASH UCHUN BOSING</b></p>
     </div>
     <div id="crosshair"></div>
+    <div id="hud">O'q-dori: ∞ | Holat: Jangovar 🔥</div>
 
 <script type="importmap">
   {
@@ -35,117 +39,147 @@
     import * as THREE from 'three';
     import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-    // 1. Sahna va Atmosfera
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x0a0a1a, 0.15); // Labirint ichida sirlilik uchun tuman
+    scene.fog = new THREE.FogExp2(0x050505, 0.15);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // 2. Boshqaruv (FPS)
     const controls = new PointerLockControls(camera, document.body);
-    const instructions = document.getElementById('instructions');
+    document.getElementById('instructions').addEventListener('click', () => controls.lock());
 
-    instructions.addEventListener('click', () => controls.lock());
-    controls.addEventListener('lock', () => instructions.style.display = 'none');
-    controls.addEventListener('unlock', () => instructions.style.display = 'block');
+    // 1. M416 Qurolini yaratish (Procedural Model)
+    const m416 = new THREE.Group();
+    
+    // Qurol korpusi
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.2, 0.8), new THREE.MeshStandardMaterial({color: 0x111111}));
+    m416.add(body);
+    
+    // Barrel (Lula)
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6), new THREE.MeshStandardMaterial({color: 0x000000}));
+    barrel.rotation.x = Math.PI / 2;
+    barrel.position.z = -0.6;
+    m416.add(barrel);
 
-    // 3. Labirint xaritasi (1 = Devor, 0 = Yo'l)
+    // Magazin
+    const mag = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.3, 0.15), new THREE.MeshStandardMaterial({color: 0x222222}));
+    mag.position.set(0, -0.2, -0.2);
+    mag.rotation.x = 0.2;
+    m416.add(mag);
+
+    // Muzzle Flash (O'q uzgandagi nur)
+    const flash = new THREE.PointLight(0xffaa00, 0, 3);
+    flash.position.z = -1;
+    m416.add(flash);
+
+    // Qurolni kameraga biriktirish (FPS view)
+    m416.position.set(0.3, -0.4, -0.5);
+    camera.add(m416);
+    scene.add(camera);
+
+    // 2. Labirint va Maxluqlar (Oldingi koddan)
     const maze = [
-        [1,1,1,1,1,1,1,1,1,1,1,1,1],
-        [1,0,0,0,1,0,0,0,0,0,0,0,1],
-        [1,0,1,0,1,0,1,1,1,0,1,0,1],
-        [1,0,1,0,0,0,1,0,0,0,1,0,1],
-        [1,0,1,1,1,1,1,0,1,1,1,0,1],
-        [1,0,0,0,0,0,0,0,1,0,0,0,1],
-        [1,1,1,0,1,1,1,0,1,0,1,1,1],
-        [1,0,0,0,1,0,0,0,1,0,0,0,1],
-        [1,1,1,1,1,1,1,1,1,1,1,1,1]
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,0,1,0,0,0,0,0,2,0,0,0,1],
+        [1,0,1,0,1,0,1,1,1,0,1,1,1,0,1],
+        [1,2,1,0,0,0,0,0,0,0,1,0,0,2,1],
+        [1,1,1,1,1,1,1,0,1,1,1,0,1,1,1],
+        [1,0,0,0,2,0,0,0,1,0,0,0,0,0,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ];
 
-    // 4. Dunyo elementlari
-    const wallGeo = new THREE.BoxGeometry(2, 4, 2);
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x444466 });
-    
+    const monsters = [];
     maze.forEach((row, z) => {
         row.forEach((cell, x) => {
             if (cell === 1) {
-                const wall = new THREE.Mesh(wallGeo, wallMat);
+                const wall = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 2), new THREE.MeshStandardMaterial({color: 0x222222}));
                 wall.position.set(x * 2, 2, z * 2);
                 scene.add(wall);
+            } else if (cell === 2) {
+                const m = new THREE.Group();
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.7), new THREE.MeshBasicMaterial({color: 0xff0000}));
+                head.position.y = 1;
+                m.add(head);
+                m.position.set(x * 2, 0, z * 2);
+                scene.add(m);
+                monsters.push(m);
             }
         });
     });
 
-    const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(100, 100),
-        new THREE.MeshStandardMaterial({ color: 0x111111 })
-    );
-    floor.rotation.x = -Math.PI / 2;
+    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({color: 0x050505}));
+    floor.rotation.x = -Math.PI/2;
     scene.add(floor);
 
-    const light = new THREE.PointLight(0xffffff, 20, 15); // O'yinchi chirog'i
-    scene.add(light);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
-
-    // 5. Harakat mantiqi
-    let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-    const velocity = new THREE.Vector3();
-    const direction = new THREE.Vector3();
-
-    const onKeyDown = (e) => {
-        switch (e.code) {
-            case 'KeyW': moveForward = true; break;
-            case 'KeyS': moveBackward = true; break;
-            case 'KeyA': moveLeft = true; break;
-            case 'KeyD': moveRight = true; break;
+    // 3. O'q uzish mexanikasi
+    let isFiring = false;
+    window.addEventListener('mousedown', (e) => {
+        if (controls.isLocked && e.button === 0) {
+            fire();
         }
-    };
-    const onKeyUp = (e) => {
-        switch (e.code) {
-            case 'KeyW': moveForward = false; break;
-            case 'KeyS': moveBackward = false; break;
-            case 'KeyA': moveLeft = false; break;
-            case 'KeyD': moveRight = false; break;
-        }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
+    });
 
-    camera.position.set(2, 1.6, 2); // O'yinchi ko'z darajasi
+    function fire() {
+        if (isFiring) return;
+        isFiring = true;
+
+        // Flash effekti
+        flash.intensity = 20;
+        
+        // Recoil (Orqaga tepish)
+        m416.position.z += 0.1;
+        m416.rotation.x -= 0.1;
+
+        // O'q nuri (Raycasting) - Maxluqni urish
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+        const hits = raycaster.intersectObjects(monsters, true);
+
+        if (hits.length > 0) {
+            const hitMonster = hits[0].object.parent;
+            scene.remove(hitMonster);
+            monsters.splice(monsters.indexOf(hitMonster), 1);
+        }
+
+        setTimeout(() => {
+            flash.intensity = 0;
+            m416.position.z -= 0.1;
+            m416.rotation.x += 0.1;
+            isFiring = false;
+        }, 50);
+    }
+
+    // 4. Harakat
+    let keys = {};
+    document.addEventListener('keydown', (e) => keys[e.code] = true);
+    document.addEventListener('keyup', (e) => keys[e.code] = false);
+
+    camera.position.set(2, 1.6, 2);
 
     function animate() {
         requestAnimationFrame(animate);
-
         if (controls.isLocked) {
-            velocity.x -= velocity.x * 10.0 * 0.016;
-            velocity.z -= velocity.z * 10.0 * 0.016;
+            if (keys['KeyW']) controls.moveForward(0.1);
+            if (keys['KeyS']) controls.moveForward(-0.1);
+            if (keys['KeyA']) controls.moveRight(-0.1);
+            if (keys['KeyD']) controls.moveRight(0.1);
 
-            direction.z = Number(moveForward) - Number(moveBackward);
-            direction.x = Number(moveRight) - Number(moveLeft);
-            direction.normalize();
-
-            if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * 0.016;
-            if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * 0.016;
-
-            controls.moveRight(-velocity.x * 0.016);
-            controls.moveForward(-velocity.z * 0.016);
-            
-            // Chiroqni kamera bilan birga olib yurish
-            light.position.copy(camera.position);
+            monsters.forEach(m => {
+                const dir = new THREE.Vector3().subVectors(camera.position, m.position).normalize();
+                m.position.x += dir.x * 0.015;
+                m.position.z += dir.z * 0.015;
+                if (m.position.distanceTo(camera.position) < 1) {
+                    alert("O'YIN TUGADI!");
+                    location.reload();
+                }
+            });
         }
-
         renderer.render(scene, camera);
     }
     animate();
-
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
 </script>
 </body>
 </html>

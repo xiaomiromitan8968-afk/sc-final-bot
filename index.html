@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Interaktiv 3D Kub</title>
+    <title>3D Rubik Cube - Yig'ish Imkoniyati</title>
     <style>
-        body { margin: 0; background: #050505; }
-        canvas { display: block; }
-        #info {
-            position: absolute; top: 10px; width: 100%;
-            text-align: center; color: white; font-family: sans-serif;
-        }
+        body { margin: 0; background: #111; overflow: hidden; color: white; font-family: sans-serif; }
+        #ui { position: absolute; bottom: 20px; left: 20px; pointer-events: none; }
+        kbd { background: #333; padding: 2px 6px; border-radius: 4px; border: 1px solid #555; }
     </style>
 </head>
 <body>
-    <div id="info">Sichqoncha bilan aylantiring</div>
-    
+    <div id="ui">
+        <p>Aylantirish uchun tugmalarni bosing: <br>
+        <kbd>U</kbd> - Yuqori (Up) | <kbd>D</kbd> - Past (Down) | <kbd>L</kbd> - Chap (Left) | <kbd>R</kbd> - O'ng (Right)</p>
+    </div>
+
     <script type="importmap">
         {
             "imports": {
@@ -27,65 +27,81 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        // 1. Sahna
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // 2. Kontrol (Sichqoncha bilan boshqarish)
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
+        camera.position.set(5, 5, 5);
+        controls.update();
 
-        // 3. Kub yaratish funksiyasi
-        function createPiece(x, y, z) {
-            const geometry = new THREE.BoxGeometry(0.95, 0.95, 0.95);
-            const materials = [
-                new THREE.MeshLambertMaterial({color: 0xff0000}), // O'ng (Qizil)
-                new THREE.MeshLambertMaterial({color: 0xffa500}), // Chap (To'q sariq)
-                new THREE.MeshLambertMaterial({color: 0xffffff}), // Yuqori (Oq)
-                new THREE.MeshLambertMaterial({color: 0xffff00}), // Past (Sariq)
-                new THREE.MeshLambertMaterial({color: 0x00ff00}), // Oldi (Yashil)
-                new THREE.MeshLambertMaterial({color: 0x0000ff})  // Orqa (Ko'k)
-            ];
-            const mesh = new THREE.Mesh(geometry, materials);
-            mesh.position.set(x, y, z);
-            return mesh;
-        }
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+        scene.add(ambientLight);
 
-        const cubeGroup = new THREE.Group();
-        for (let x = -1; x <= 1; x++) {
-            for (let y = -1; y <= 1; y++) {
-                for (let z = -1; z <= 1; z++) {
-                    const piece = createPiece(x, y, z);
-                    cubeGroup.add(piece);
+        // Kub bo'lakchalarini saqlash uchun massiv
+        const pieces = [];
+
+        function createCube() {
+            const colors = [0xff0000, 0xffa500, 0xffffff, 0xffff00, 0x00ff00, 0x0000ff];
+            for (let x = -1; x <= 1; x++) {
+                for (let y = -1; y <= 1; y++) {
+                    for (let z = -1; z <= 1; z++) {
+                        const geometry = new THREE.BoxGeometry(0.95, 0.95, 0.95);
+                        const materials = colors.map(c => new THREE.MeshLambertMaterial({ color: c }));
+                        const mesh = new THREE.Mesh(geometry, materials);
+                        mesh.position.set(x, y, z);
+                        scene.add(mesh);
+                        pieces.push(mesh);
+                    }
                 }
             }
         }
-        scene.add(cubeGroup);
+        createCube();
 
-        // 4. Yorug'lik
-        const light1 = new THREE.DirectionalLight(0xffffff, 1);
-        light1.position.set(5, 5, 5);
-        scene.add(light1);
-        scene.add(new THREE.AmbientLight(0x404040, 2));
+        // Aylantirish mantiqi
+        function rotateLayer(axis, layerValue) {
+            const group = new THREE.Group();
+            scene.add(group);
 
-        camera.position.z = 6;
+            // Tanlangan qatlamdagi bo'lakchalarni aniqlash
+            const layerPieces = pieces.filter(p => {
+                const pos = new THREE.Vector3();
+                p.getWorldPosition(pos);
+                return Math.round(pos[axis]) === layerValue;
+            });
 
-        // 5. Animatsiya
+            layerPieces.forEach(p => group.attach(p));
+
+            // Animatsiya (soddalashtirilgan)
+            const rotationAxis = new THREE.Vector3();
+            rotationAxis[axis] = 1;
+            group.rotateOnAxis(rotationAxis, Math.PI / 2);
+
+            // Guruhdan chiqarish va sahnaga qaytarish
+            group.updateMatrixWorld();
+            layerPieces.forEach(p => {
+                scene.attach(p);
+            });
+            scene.remove(group);
+        }
+
+        // Klaviatura hodisalari
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toUpperCase();
+            if (key === 'U') rotateLayer('y', 1);  // Yuqori qatlam
+            if (key === 'D') rotateLayer('y', -1); // Pastki qatlam
+            if (key === 'L') rotateLayer('x', -1); // Chap qatlam
+            if (key === 'R') rotateLayer('x', 1);  // O'ng qatlam
+        });
+
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
             renderer.render(scene, camera);
         }
         animate();
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
     </script>
 </body>
 </html>

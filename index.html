@@ -2,110 +2,113 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>Sniper Pro Game</title>
+    <title>Orbit Escape</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #1a1a1a; cursor: crosshair; }
-        canvas { display: block; }
-        #ui {
-            position: absolute; top: 20px; left: 20px;
-            color: #00ff00; font-family: 'Courier New', monospace;
-            pointer-events: none;
-        }
+        body { margin: 0; background: #0f172a; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        canvas { background: #1e293b; box-shadow: 0 0 50px rgba(0,0,0,0.5); border-radius: 8px; }
+        #info { position: absolute; top: 20px; color: #38bdf8; font-family: sans-serif; text-align: center; pointer-events: none; }
     </style>
 </head>
 <body>
-    <div id="ui">
-        <h1>SCORE: <span id="score">0</span></h1>
-        <p>Masofa: <span id="dist">450</span>m</p>
-        <p>Shamol: <span id="wind">2.4</span> m/s</p>
+    <div id="info">
+        <h1 id="score">0</h1>
+        <p>Sichqonchani bosing: Orbitani o'zgartirish</p>
     </div>
-    <canvas id="gameCanvas"></canvas>
+    <canvas id="game"></canvas>
 
 <script>
-const canvas = document.getElementById('gameCanvas');
+const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = 400;
+canvas.height = 400;
 
 let score = 0;
-let mouse = { x: 0, y: 0 };
-let target = { x: 100, y: 100, r: 30, dx: 2, dy: 2 };
+let gameActive = true;
+let angle = 0;
+let orbitRadius = 80;
+let targetRadius = 80;
+let enemies = [];
 
-// Nishon harakati
-function updateTarget() {
-    target.x += target.dx;
-    target.y += target.dy;
+// O'yinchi obyekti
+const player = { x: 0, y: 0, size: 8 };
 
-    if (target.x + target.r > canvas.width || target.x - target.r < 0) target.dx *= -1;
-    if (target.y + target.r > canvas.height || target.y - target.r < 0) target.dy *= -1;
+function spawnEnemy() {
+    if (!gameActive) return;
+    const speed = 2 + Math.random() * 2;
+    const angle = Math.random() * Math.PI * 2;
+    enemies.push({
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: 6
+    });
+    setTimeout(spawnEnemy, 1000 - Math.min(score * 5, 700));
 }
 
-// Snayper durbini (Scope) chizish
-function drawScope() {
-    ctx.strokeStyle = '#00ff00';
-    ctx.lineWidth = 2;
-    
-    // Tashqi aylana
-    ctx.beginPath();
-    ctx.arc(mouse.x, mouse.y, 100, 0, Math.PI * 2);
-    ctx.stroke();
+function update() {
+    if (!gameActive) return;
 
-    // Crosshair (Kesishgan chiziqlar)
-    ctx.beginPath();
-    ctx.moveTo(mouse.x - 120, mouse.y);
-    ctx.lineTo(mouse.x + 120, mouse.y);
-    ctx.moveTo(mouse.x, mouse.y - 120);
-    ctx.lineTo(mouse.x, mouse.y + 120);
-    ctx.stroke();
+    // Orbitani silliq o'zgartirish
+    orbitRadius += (targetRadius - orbitRadius) * 0.1;
+    angle += 0.05;
+
+    player.x = canvas.width / 2 + Math.cos(angle) * orbitRadius;
+    player.y = canvas.height / 2 + Math.sin(angle) * orbitRadius;
+
+    enemies.forEach((enemy, index) => {
+        enemy.x += enemy.vx;
+        enemy.y += enemy.vy;
+
+        // To'qnashuvni tekshirish
+        const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+        if (dist < player.size + enemy.size) {
+            gameActive = false;
+            alert("O'yin tugadi! Ballingiz: " + score);
+            location.reload();
+        }
+
+        // Ekranda chiqib ketgan dushmanlarni o'chirish
+        if (enemy.x < 0 || enemy.x > canvas.width || enemy.y < 0 || enemy.y > canvas.height) {
+            enemies.splice(index, 1);
+            score++;
+            scoreEl.innerText = score;
+        }
+    });
 }
 
-function drawTarget() {
-    ctx.fillStyle = 'red';
-    ctx.beginPath();
-    ctx.arc(target.x, target.y, target.r, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Nishon ichidagi oq nuqta
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(target.x, target.y, target.r / 3, 0, Math.PI * 2);
-    ctx.fill();
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Orbitani chizish
+    ctx.strokeStyle = '#334155';
+    ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2, 80, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2, 140, 0, Math.PI*2); ctx.stroke();
+
+    // Dushmanlar
+    ctx.fillStyle = '#f43f5e';
+    enemies.forEach(e => {
+        ctx.beginPath(); ctx.arc(e.x, e.y, e.size, 0, Math.PI*2); ctx.fill();
+    });
+
+    // O'yinchi
+    ctx.fillStyle = '#38bdf8';
+    ctx.shadowBlur = 15; ctx.shadowColor = '#38bdf8';
+    ctx.beginPath(); ctx.arc(player.x, player.y, player.size, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    update();
+    requestAnimationFrame(draw);
 }
 
-function animate() {
-    ctx.fillStyle = 'rgba(26, 26, 26, 0.3)'; // Silliq harakat effekti
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    updateTarget();
-    drawTarget();
-    drawScope();
-    
-    requestAnimationFrame(animate);
-}
-
-// Sichqoncha harakati
-window.addEventListener('mousemove', (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-});
-
-// Otish mexanikasi
 window.addEventListener('mousedown', () => {
-    const dist = Math.hypot(mouse.x - target.x, mouse.y - target.y);
-    
-    if (dist < target.r) {
-        score += 100;
-        scoreEl.innerText = score;
-        // Yangi nishon joylashuvi
-        target.x = Math.random() * canvas.width;
-        target.y = Math.random() * canvas.height;
-        target.dx *= 1.1; // Tezlikni oshirish
-    }
+    targetRadius = (targetRadius === 80) ? 140 : 80;
 });
 
-animate();
+spawnEnemy();
+draw();
 </script>
 </body>
 </html>

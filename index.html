@@ -1,109 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Cube - Three.js</title>
+    <title>Interaktiv 3D Kub</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #111; }
+        body { margin: 0; background: #050505; }
         canvas { display: block; }
+        #info {
+            position: absolute; top: 10px; width: 100%;
+            text-align: center; color: white; font-family: sans-serif;
+        }
     </style>
 </head>
 <body>
+    <div id="info">Sichqoncha bilan aylantiring</div>
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
 
-<script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
-    }
-  }
-</script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-<script type="module">
-    import * as THREE from 'three';
+        // 1. Sahna
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-    // 1. Sahna va Kamera sozlamalari
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+        // 2. Kontrol (Sichqoncha bilan boshqarish)
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
 
-    // 2. Yorug'lik
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-    const pointLight = new THREE.PointLight(0xffffff, 1);
-    pointLight.position.set(5, 5, 5);
-    scene.add(pointLight);
-
-    // 3. Cube Klassi (Rasmda ko'rsatilgan mantiq asosida)
-    class RubiksCube {
-        constructor() {
-            this.group = new THREE.Group();
-            this.pieces = [];
-            this.generateCube();
-            scene.add(this.group);
+        // 3. Kub yaratish funksiyasi
+        function createPiece(x, y, z) {
+            const geometry = new THREE.BoxGeometry(0.95, 0.95, 0.95);
+            const materials = [
+                new THREE.MeshLambertMaterial({color: 0xff0000}), // O'ng (Qizil)
+                new THREE.MeshLambertMaterial({color: 0xffa500}), // Chap (To'q sariq)
+                new THREE.MeshLambertMaterial({color: 0xffffff}), // Yuqori (Oq)
+                new THREE.MeshLambertMaterial({color: 0xffff00}), // Past (Sariq)
+                new THREE.MeshLambertMaterial({color: 0x00ff00}), // Oldi (Yashil)
+                new THREE.MeshLambertMaterial({color: 0x0000ff})  // Orqa (Ko'k)
+            ];
+            const mesh = new THREE.Mesh(geometry, materials);
+            mesh.position.set(x, y, z);
+            return mesh;
         }
 
-        generateCube() {
-            const size = 1.0;
-            const gap = 0.1;
-            
-            // 3x3x3 bo'lakchalarni yaratish
-            for (let x = -1; x <= 1; x++) {
-                for (let y = -1; y <= 1; y++) {
-                    for (let z = -1; z <= 1; z++) {
-                        const geometry = new THREE.BoxGeometry(size, size, size);
-                        
-                        // Har bir tomon uchun ranglar
-                        const materials = [
-                            new THREE.MeshLambertMaterial({ color: 0xff0000 }), // O'ng
-                            new THREE.MeshLambertMaterial({ color: 0xffa500 }), // Chap
-                            new THREE.MeshLambertMaterial({ color: 0xffffff }), // Yuqori
-                            new THREE.MeshLambertMaterial({ color: 0xffff00 }), // Past
-                            new THREE.MeshLambertMaterial({ color: 0x00ff00 }), // Oldi
-                            new THREE.MeshLambertMaterial({ color: 0x0000ff })  // Orqa
-                        ];
-
-                        const piece = new THREE.Mesh(geometry, materials);
-                        piece.position.set(
-                            x * (size + gap),
-                            y * (size + gap),
-                            z * (size + gap)
-                        );
-                        
-                        this.group.add(piece);
-                        this.pieces.push(piece);
-                    }
+        const cubeGroup = new THREE.Group();
+        for (let x = -1; x <= 1; x++) {
+            for (let y = -1; y <= 1; y++) {
+                for (let z = -1; z <= 1; z++) {
+                    const piece = createPiece(x, y, z);
+                    cubeGroup.add(piece);
                 }
             }
         }
+        scene.add(cubeGroup);
 
-        update() {
-            // Kubni sekin aylantirib turish
-            this.group.rotation.y += 0.01;
-            this.group.rotation.x += 0.005;
+        // 4. Yorug'lik
+        const light1 = new THREE.DirectionalLight(0xffffff, 1);
+        light1.position.set(5, 5, 5);
+        scene.add(light1);
+        scene.add(new THREE.AmbientLight(0x404040, 2));
+
+        camera.position.z = 6;
+
+        // 5. Animatsiya
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
         }
-    }
+        animate();
 
-    const cube = new RubiksCube();
-    camera.position.z = 8;
-
-    // 4. Animatsiya sikli
-    function animate() {
-        requestAnimationFrame(animate);
-        cube.update();
-        renderer.render(scene, camera);
-    }
-
-    // Oyna o'lchami o'zgarganda moslashish
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    animate();
-</script>
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
 </html>

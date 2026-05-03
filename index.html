@@ -2,216 +2,110 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abadiy Sevgi 💙</title>
+    <title>Sniper Pro Game</title>
     <style>
-        /* Umumiy ko'rinish */
-        body, html {
-            margin: 0; padding: 0; height: 100%; overflow: hidden;
-            background: #00050a;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #e0f2ff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* Fon effekti */
-        .bg-glow {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #001f3f 0%, #00050a 100%);
-            z-index: -1;
-        }
-
-        /* Kirish ekrani */
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 1000;
-            transition: 1.2s ease-in-out;
-        }
-
-        .overlay button {
-            padding: 15px 40px; font-size: 1.2rem;
-            background: transparent; color: #00a2ff;
-            border: 2px solid #00a2ff; border-radius: 50px;
-            cursor: pointer; box-shadow: 0 0 20px #004b8d;
-            transition: 0.3s;
-        }
-
-        .overlay button:hover {
-            background: #00a2ff; color: #fff;
-            box-shadow: 0 0 40px #00a2ff;
-        }
-
-        /* Asosiy konteyner - yozuvlar orasini ochish uchun padding qo'shildi */
-        .main-content {
-            text-align: center;
-            width: 90%;
-            max-width: 600px;
-            z-index: 10;
-        }
-
-        /* Typewriter matni uchun joy ajratish */
-        #typewriter {
-            font-size: 2rem;
-            min-height: 2.5em; /* Yozuvlar tushib ketmasligi uchun balandlik */
-            margin-bottom: 40px; /* Taymerdan uzoqlashtirish */
-            text-shadow: 0 0 15px #00a2ff;
-            line-height: 1.4;
-        }
-
-        /* Taymer stili */
-        .timer-box {
-            background: rgba(0, 31, 63, 0.6);
-            padding: 20px;
-            border-radius: 20px;
-            border: 1px solid rgba(0, 162, 255, 0.4);
-            backdrop-filter: blur(5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .timer-title {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            display: block;
-            color: #00a2ff;
-        }
-
-        #timer-display {
-            font-size: 1.1rem;
-            line-height: 1.8;
-        }
-
-        /* Effektlar */
-        .falling-rose {
-            position: absolute; top: -50px;
-            animation: fall linear forwards;
+        body { margin: 0; overflow: hidden; background: #1a1a1a; cursor: crosshair; }
+        canvas { display: block; }
+        #ui {
+            position: absolute; top: 20px; left: 20px;
+            color: #00ff00; font-family: 'Courier New', monospace;
             pointer-events: none;
-        }
-
-        @keyframes fall {
-            to { transform: translateY(110vh) rotate(360deg); }
-        }
-
-        .sparkle {
-            position: absolute; pointer-events: none;
-            animation: explode 0.8s ease-out forwards;
-        }
-
-        @keyframes explode {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
         }
     </style>
 </head>
-<body onclick="createSparkle(event)">
-
-    <div class="bg-glow"></div>
-
-    <div class="overlay" id="overlay">
-        <button onclick="startApp()">Ochish 💙</button>
+<body>
+    <div id="ui">
+        <h1>SCORE: <span id="score">0</span></h1>
+        <p>Masofa: <span id="dist">450</span>m</p>
+        <p>Shamol: <span id="wind">2.4</span> m/s</p>
     </div>
+    <canvas id="gameCanvas"></canvas>
 
-    <div class="main-content">
-        <div id="typewriter"></div>
-        
-        <div class="timer-box">
-            <span class="timer-title">Bizning baxtli kunlarimiz</span>
-            <div id="timer-display">Hisoblanmoqda...</div>
-        </div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
 
-        <p style="margin-top: 40px; opacity: 0.5; font-size: 0.8rem;">
-            Ekranga bosing ✨
-        </p>
-    </div>
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-    <audio id="bgMusic" loop>
-        <source src="musiqa.mp3" type="audio/mpeg">
-    </audio>
+let score = 0;
+let mouse = { x: 0, y: 0 };
+let target = { x: 100, y: 100, r: 30, dx: 2, dy: 2 };
 
-    <script>
-        // 1. Tanishgan sana: 2025-yil, Iyul (6-indeks), 5-kun
-        const startDate = new Date(2025, 6, 5, 0, 0, 0);
+// Nishon harakati
+function updateTarget() {
+    target.x += target.dx;
+    target.y += target.dy;
 
-        function startApp() {
-            // Overlayni yopish
-            const overlay = document.getElementById('overlay');
-            overlay.style.opacity = '0';
-            setTimeout(() => overlay.style.display = 'none', 1200);
+    if (target.x + target.r > canvas.width || target.x - target.r < 0) target.dx *= -1;
+    if (target.y + target.r > canvas.height || target.y - target.r < 0) target.dy *= -1;
+}
 
-            // Musiqani yoqish
-            const music = document.getElementById('bgMusic');
-            music.play().catch(() => console.log("Musiqa uchun fayl topilmadi"));
+// Snayper durbini (Scope) chizish
+function drawScope() {
+    ctx.strokeStyle = '#00ff00';
+    ctx.lineWidth = 2;
+    
+    // Tashqi aylana
+    ctx.beginPath();
+    ctx.arc(mouse.x, mouse.y, 100, 0, Math.PI * 2);
+    ctx.stroke();
 
-            // Funksiyalarni ishga tushirish
-            typeWriter("Sizni uchratgan kunim — hayotimning eng chiroyli sahifasi bo'lib qoladi... 💙");
-            setInterval(updateTimer, 1000);
-            setInterval(createRose, 500);
-        }
+    // Crosshair (Kesishgan chiziqlar)
+    ctx.beginPath();
+    ctx.moveTo(mouse.x - 120, mouse.y);
+    ctx.lineTo(mouse.x + 120, mouse.y);
+    ctx.moveTo(mouse.x, mouse.y - 120);
+    ctx.lineTo(mouse.x, mouse.y + 120);
+    ctx.stroke();
+}
 
-        // Harfma-harf yozish funksiyasi
-        function typeWriter(text) {
-            let i = 0;
-            const container = document.getElementById("typewriter");
-            function type() {
-                if (i < text.length) {
-                    container.innerHTML += text.charAt(i);
-                    i++;
-                    setTimeout(type, 70);
-                }
-            }
-            type();
-        }
+function drawTarget() {
+    ctx.fillStyle = 'red';
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, target.r, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Nishon ichidagi oq nuqta
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, target.r / 3, 0, Math.PI * 2);
+    ctx.fill();
+}
 
-        // Taymerni yangilash
-        function updateTimer() {
-            const now = new Date();
-            const diff = now - startDate;
+function animate() {
+    ctx.fillStyle = 'rgba(26, 26, 26, 0.3)'; // Silliq harakat effekti
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    updateTarget();
+    drawTarget();
+    drawScope();
+    
+    requestAnimationFrame(animate);
+}
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const mins = Math.floor((diff / 1000 / 60) % 60);
-            const secs = Math.floor((diff / 1000) % 60);
+// Sichqoncha harakati
+window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
 
-            document.getElementById("timer-display").innerHTML = 
-                `<b>${days}</b> kun, <b>${hours}</b> soat, <br> <b>${mins}</b> daqiqa va <b>${secs}</b> soniya`;
-        }
+// Otish mexanikasi
+window.addEventListener('mousedown', () => {
+    const dist = Math.hypot(mouse.x - target.x, mouse.y - target.y);
+    
+    if (dist < target.r) {
+        score += 100;
+        scoreEl.innerText = score;
+        // Yangi nishon joylashuvi
+        target.x = Math.random() * canvas.width;
+        target.y = Math.random() * canvas.height;
+        target.dx *= 1.1; // Tezlikni oshirish
+    }
+});
 
-        // Ko'k atirgullar yomg'iri
-        function createRose() {
-            const rose = document.createElement('div');
-            rose.classList.add('falling-rose');
-            rose.innerHTML = '💙';
-            rose.style.left = Math.random() * 100 + 'vw';
-            rose.style.fontSize = (Math.random() * 20 + 15) + 'px';
-            rose.style.animationDuration = (Math.random() * 3 + 4) + 's';
-            rose.style.opacity = Math.random();
-            document.body.appendChild(rose);
-            setTimeout(() => rose.remove(), 7000);
-        }
-
-        // Uchqunlar effekti
-        function createSparkle(e) {
-            for (let i = 0; i < 6; i++) {
-                const s = document.createElement('div');
-                s.classList.add('sparkle');
-                s.innerHTML = '✨';
-                s.style.left = e.clientX + 'px';
-                s.style.top = e.clientY + 'px';
-                
-                const x = (Math.random() - 0.5) * 150;
-                const y = (Math.random() - 0.5) * 150;
-                s.style.setProperty('--x', x + 'px');
-                s.style.setProperty('--y', y + 'px');
-                
-                document.body.appendChild(s);
-                setTimeout(() => s.remove(), 800);
-            }
-        }
-    </script>
+animate();
+</script>
 </body>
 </html>

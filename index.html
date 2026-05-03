@@ -1,23 +1,17 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Ulkan 3D Ochiq Dunyo (Open World)</title>
+    <title>Real World with FBX Animation</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: sans-serif; }
-        #info {
-            position: absolute; top: 10px; width: 100%; text-align: center;
-            color: white; background: rgba(0,0,0,0.5); padding: 10px 0; z-index: 100;
-        }
-        #crosshair {
-            position: absolute; top: 50%; left: 50%; width: 6px; height: 6px;
-            background: white; border-radius: 50%; transform: translate(-50%, -50%);
-        }
+        body { margin: 0; overflow: hidden; background: #87CEEB; }
+        #ui { position: absolute; top: 20px; left: 20px; color: white; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 10px; font-family: sans-serif; }
     </style>
 </head>
 <body>
-    <div id="info">Sichqonchani bosing va W,A,S,D tugmalari bilan ulkan tog'larda sayr qiling</div>
-    <div id="crosshair"></div>
+    <div id="ui">
+        <b>Model yuklanmoqda...</b><br>
+        Faylni (Catwalk Walk Turn 180 Tight.fbx) HTML bilan bir xil papkaga qo'ying.
+    </div>
 
 <script type="importmap">
   {
@@ -30,173 +24,69 @@
 
 <script type="module">
     import * as THREE from 'three';
+    import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
     import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-    // 1. Sahna va Atmosfera
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB);
-    scene.fog = new THREE.FogExp2(0x87CEEB, 0.005); // Tuman yordamida uzoq masofalar realistik ko'rinadi
+    scene.background = new THREE.Color(0xa0a0a0);
+    scene.fog = new THREE.Fog(0xa0a0a0, 10, 50);
 
-    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 2000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 3, 10);
+
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     document.body.appendChild(renderer.domElement);
 
-    const controls = new PointerLockControls(camera, document.body);
-    document.body.addEventListener('click', () => controls.lock());
-
-    // 2. Yorug'lik (Quyosh va Osmon nuri)
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
-    hemiLight.position.set(0, 500, 0);
+    // Yorug'lik
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2);
     scene.add(hemiLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-    dirLight.position.set(500, 1000, 500);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+    dirLight.position.set(0, 20, 10);
     dirLight.castShadow = true;
-    dirLight.shadow.camera.top = 200;
-    dirLight.shadow.camera.bottom = -200;
-    dirLight.shadow.camera.left = -200;
-    dirLight.shadow.camera.right = 200;
-    dirLight.shadow.camera.near = 0.1;
-    dirLight.shadow.camera.far = 2000;
     scene.add(dirLight);
 
-    // 3. Ulkan Tog'li Relef (Procedural Generation)
-    const worldSize = 1000;
-    const terrainGeo = new THREE.PlaneGeometry(worldSize, worldSize, 150, 150);
-    terrainGeo.rotateX(-Math.PI / 2);
+    // Yer
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshPhongMaterial({ color: 0x999999 }));
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
 
-    const positions = terrainGeo.attributes.position;
-    for (let i = 0; i < positions.count; i++) {
-        let x = positions.getX(i);
-        let z = positions.getZ(i);
+    // MIXER (Animatsiya boshqaruvchisi)
+    let mixer;
+    const clock = new THREE.Clock();
+
+    // FBX MODELINI YUKLASH
+    const loader = new FBXLoader();
+    // DIQQAT: Fayl nomi siz yuborganingizdek bo'lishi kerak
+    loader.load('Catwalk Walk Turn 180 Tight.fbx', (object) => {
         
-        // Matematik funksiyalar yordamida tog' va tekisliklar hosil qilish
-        let y = (Math.sin(x * 0.02) * 10) + (Math.cos(z * 0.02) * 10);
-        y += (Math.sin(x * 0.005) * 30) + (Math.cos(z * 0.005) * 30); // Katta tog'lar
-        
-        positions.setY(i, y);
-    }
-    terrainGeo.computeVertexNormals();
+        object.scale.set(0.01, 0.01, 0.01); // FBX odatda juda katta bo'ladi, kichraytiramiz
+        object.traverse(child => {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+            }
+        });
 
-    const terrainMat = new THREE.MeshStandardMaterial({ 
-        color: 0x3b5e2b, // To'q yashil
-        roughness: 0.8,
-        flatShading: true 
-    });
-    const terrain = new THREE.Mesh(terrainGeo, terrainMat);
-    terrain.receiveShadow = true;
-    scene.add(terrain);
+        // Animatsiyani yoqish
+        mixer = new THREE.AnimationMixer(object);
+        const action = mixer.clipAction(object.animations[0]);
+        action.play();
 
-    // 4. Okean / Dengiz sathi
-    const waterGeo = new THREE.PlaneGeometry(worldSize, worldSize);
-    const waterMat = new THREE.MeshStandardMaterial({ 
-        color: 0x1e90ff, 
-        transparent: true, 
-        opacity: 0.8,
-        roughness: 0.1
-    });
-    const water = new THREE.Mesh(waterGeo, waterMat);
-    water.rotation.x = -Math.PI / 2;
-    water.position.y = -5; // Suv sathi
-    scene.add(water);
-
-    // 5. Dunyoga ob'ektlar (masalan, ulkan qoyalar) tarqatish
-    const boxGeo = new THREE.BoxGeometry(4, 10, 4);
-    const boxMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
-    
-    for(let i=0; i<200; i++) {
-        const x = (Math.random() - 0.5) * worldSize;
-        const z = (Math.random() - 0.5) * worldSize;
-        
-        // Y o'qini relefning balandligiga moslash
-        let y = (Math.sin(x * 0.02) * 10) + (Math.cos(z * 0.02) * 10) + (Math.sin(x * 0.005) * 30) + (Math.cos(z * 0.005) * 30);
-        
-        if (y > 0) { // Suv ostiga qoya qo'ymaymiz
-            const rock = new THREE.Mesh(boxGeo, boxMat);
-            rock.position.set(x, y + 5, z);
-            rock.castShadow = true;
-            rock.rotation.y = Math.random() * Math.PI;
-            scene.add(rock);
-        }
-    }
-
-    // 6. Fizika va Harakat (Kamera yerdan uzilmasligi uchun)
-    const velocity = new THREE.Vector3();
-    const direction = new THREE.Vector3();
-    let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-    let canJump = false;
-
-    document.addEventListener('keydown', (e) => {
-        if(e.code === 'KeyW') moveForward = true;
-        if(e.code === 'KeyS') moveBackward = true;
-        if(e.code === 'KeyA') moveLeft = true;
-        if(e.code === 'KeyD') moveRight = true;
-        if(e.code === 'Space' && canJump) velocity.y += 20; // Sakrash
-    });
-    document.addEventListener('keyup', (e) => {
-        if(e.code === 'KeyW') moveForward = false;
-        if(e.code === 'KeyS') moveBackward = false;
-        if(e.code === 'KeyA') moveLeft = false;
-        if(e.code === 'KeyD') moveRight = false;
-    });
-
-    const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0), 0, 10);
-    camera.position.set(0, 50, 0); // Boshlang'ich balandlik
-
-    let prevTime = performance.now();
+        scene.add(object);
+        document.getElementById('ui').innerHTML = "<b>Model yuklandi!</b><br>Personaj harakatlanmoqda.";
+    }, 
+    (xhr) => { console.log((xhr.loaded / xhr.total * 100) + '% yuklandi'); },
+    (error) => { console.error('Xato yuz berdi:', error); });
 
     function animate() {
         requestAnimationFrame(animate);
-
-        const time = performance.now();
-        const delta = (time - prevTime) / 1000;
-
-        if (controls.isLocked) {
-            // Yerni tekshirish (Gravitatsiya)
-            raycaster.ray.origin.copy(controls.getObject().position);
-            raycaster.ray.origin.y += 1;
-            
-            const intersections = raycaster.intersectObject(terrain);
-            const onObject = intersections.length > 0;
-
-            velocity.x -= velocity.x * 5.0 * delta;
-            velocity.z -= velocity.z * 5.0 * delta;
-            velocity.y -= 9.8 * 10.0 * delta; // Tortishish kuchi
-
-            direction.z = Number(moveForward) - Number(moveBackward);
-            direction.x = Number(moveRight) - Number(moveLeft);
-            direction.normalize();
-
-            const speed = 100.0;
-            if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
-            if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
-
-            if (onObject === true) {
-                velocity.y = Math.max(0, velocity.y);
-                canJump = true;
-                
-                // Kamerani yer sathiga to'g'rilash (Tog'ga chiqqanda tepaga ko'tariladi)
-                const groundHeight = intersections[0].point.y;
-                if (camera.position.y < groundHeight + 2) {
-                    camera.position.y = groundHeight + 2;
-                }
-            }
-
-            controls.moveRight(-velocity.x * delta);
-            controls.moveForward(-velocity.z * delta);
-            controls.getObject().position.y += (velocity.y * delta);
-
-            if (controls.getObject().position.y < -4) {
-                velocity.y = 0;
-                controls.getObject().position.y = -4; // Suv ustida suzish
-                canJump = true;
-            }
-        }
-
+        const delta = clock.getDelta();
+        if (mixer) mixer.update(delta);
         renderer.render(scene, camera);
-        prevTime = time;
     }
     animate();
 

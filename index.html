@@ -3,94 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jarvis Sound Visualizer</title>
+    <title>SC_ MALIKOV - Trade Art</title>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        canvas { position: absolute; top: 0; left: 0; }
-        #btn { 
-            z-index: 10; padding: 15px 30px; background: none; border: 2px solid #00f2ff; 
-            color: #00f2ff; font-family: 'Courier New', monospace; cursor: pointer;
-            border-radius: 50px; text-transform: uppercase; letter-spacing: 2px;
-            box-shadow: 0 0 15px #00f2ff;
+        body { margin: 0; background: #050505; overflow: hidden; font-family: 'Courier New', monospace; }
+        canvas { display: block; }
+        #ui {
+            position: absolute; top: 20px; left: 20px; color: #fff;
+            pointer-events: none; text-shadow: 0 0 10px rgba(0,255,255,0.5);
         }
+        .info { font-size: 12px; opacity: 0.7; }
     </style>
 </head>
 <body>
 
-    <button id="btn">Tizimni yoqish</button>
-    <canvas id="canvas"></canvas>
+    <div id="ui">
+        <div>SESSION: <span id="trend">NEUTRAL</span></div>
+        <div class="info">SMC Art Generator v1.0</div>
+    </div>
+    <canvas id="tradeCanvas"></canvas>
 
-    <script>
-        const btn = document.getElementById('btn');
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+<script>
+    const canvas = document.getElementById('tradeCanvas');
+    const ctx = canvas.getContext('2d');
+    const trendEl = document.getElementById('trend');
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-        let audioCtx, analyser, source, dataArray;
+    let points = [];
+    let isPressing = false;
+    let priceY = canvas.height / 2;
+    let priceX = 0;
+    let fibZones = [0.618, 0.786, 0.5]; // OTE (Optimal Trade Entry) zonalari
 
-        function setupAudio() {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioCtx.createAnalyser();
+    class TradeElement {
+        constructor(x, y, type) {
+            this.x = x;
+            this.y = y;
+            this.type = type; // 'up' yoki 'down'
+            this.size = Math.random() * 20 + 5;
+            this.opacity = 1;
+            this.color = type === 'up' ? `0, 255, 150` : `180, 50, 255`;
+        }
+        draw() {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = `rgb(${this.color})`;
             
-            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-                source = audioCtx.createMediaStreamSource(stream);
-                source.connect(analyser);
-                analyser.fftSize = 256; // To'lqin aniqligi
-                const bufferLength = analyser.frequencyBinCount;
-                dataArray = new Uint8Array(bufferLength);
-                btn.style.display = 'none'; // Tugmani yashirish
-                animate();
-            }).catch(err => alert("Mikrofon ruxsati kerak: " + err));
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            analyser.getByteFrequencyData(dataArray);
-
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = 100;
-
-            // Markaziy pulsatsiya (Jarvis ko'zi)
-            let avg = dataArray.reduce((a, b) => a + b) / dataArray.length;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius + avg * 0.5, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(0, 242, 255, ${avg / 255})`;
-            ctx.lineWidth = 5;
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = "#00f2ff";
-            ctx.stroke();
-
-            // Atrofdagi to'lqin chiziqlari
-            for (let i = 0; i < dataArray.length; i++) {
-                const barHeight = dataArray[i] * 1.2;
-                const angle = (i * Math.PI * 2) / dataArray.length;
-                
-                const x1 = centerX + Math.cos(angle) * radius;
-                const y1 = centerY + Math.sin(angle) * radius;
-                const x2 = centerX + Math.cos(angle) * (radius + barHeight);
-                const y2 = centerY + Math.sin(angle) * (radius + barHeight);
-
-                ctx.strokeStyle = `hsl(${180 + i}, 100%, 50%)`;
-                ctx.lineWidth = 3;
+            if (this.type === 'up') {
+                // Yashil neon chiziqlar
+                ctx.strokeStyle = `rgba(${this.color}, ${this.opacity})`;
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x - 20, this.y + 20);
                 ctx.stroke();
+            } else {
+                // Binafsha tuman (shakllar)
+                ctx.fillStyle = `rgba(${this.color}, ${this.opacity * 0.3})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
             }
-            requestAnimationFrame(animate);
+        }
+    }
+
+    function generateFibNode(x, y) {
+        // Fibonacci zonalarida "Order Block" kristallarini chizish
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(x - 30, y - 30, 60, 60);
+        ctx.font = '10px Arial';
+        ctx.fillStyle = '#fff';
+        ctx.fillText("OB ZONE", x + 35, y);
+    }
+
+    function animate() {
+        // Ekranni to'liq tozalamaymiz, "iz" qolishi uchun
+        ctx.fillStyle = 'rgba(5, 5, 5, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (isPressing) {
+            priceX += 3;
+            let change = (Math.random() - 0.4) * 20; // Narx yuqoriga moyil
+            priceY -= change;
+            
+            let type = change > 0 ? 'up' : 'down';
+            trendEl.innerText = type === 'up' ? "BULLISH (BOS)" : "RETRACTION";
+            trendEl.style.color = type === 'up' ? "#00ff96" : "#b432ff";
+
+            points.push(new TradeElement(priceX, priceY, type));
+
+            // Fibonacci simulyatsiyasi
+            if (Math.random() > 0.98) generateFibNode(priceX, priceY);
         }
 
-        btn.addEventListener('click', () => {
-            if (!audioCtx) setupAudio();
+        points.forEach((p, i) => {
+            p.draw();
+            p.opacity -= 0.005;
+            if (p.opacity <= 0) points.splice(i, 1);
         });
 
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-    </script>
+        // Agar narx ekrandan chiqsa, boshiga qaytadi
+        if (priceX > canvas.width) priceX = 0;
+
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('touchstart', () => isPressing = true);
+    window.addEventListener('touchend', () => isPressing = false);
+    // Sichqoncha uchun ham (agar kompyuterda ko'rsangiz)
+    window.addEventListener('mousedown', () => isPressing = true);
+    window.addEventListener('mouseup', () => isPressing = false);
+
+    animate();
+</script>
 </body>
 </html>

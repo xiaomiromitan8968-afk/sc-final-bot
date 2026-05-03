@@ -1,221 +1,109 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Web Clone</title>
+    <title>3D Cube - Three.js</title>
     <style>
-        /* CSS - Dizayn qismi */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .telegram-wrapper {
-            display: flex;
-            width: 900px;
-            height: 600px;
-            background: white;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        /* Chap panel */
-        .contacts-panel {
-            width: 30%;
-            border-right: 1px solid #e6e6e6;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
-            padding: 20px;
-            background: #3390ec;
-            color: white;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .contact-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #f2f2f2;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .contact-item:hover {
-            background-color: #f5f5f5;
-        }
-
-        .contact-item.active {
-            background-color: #e5f1fd;
-            border-left: 4px solid #3390ec;
-        }
-
-        /* O'ng panel */
-        .chat-panel {
-            width: 70%;
-            display: flex;
-            flex-direction: column;
-            background: #e7ebf0; /* Chat foni */
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Telegram pattern */
-        }
-
-        .chat-header {
-            padding: 15px 25px;
-            background: white;
-            font-weight: bold;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .messages-container {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .message {
-            margin-bottom: 10px;
-            padding: 8px 15px;
-            border-radius: 15px;
-            max-width: 70%;
-            font-size: 0.95rem;
-            line-height: 1.4;
-            position: relative;
-        }
-
-        .incoming {
-            background: white;
-            align-self: flex-start;
-            border-bottom-left-radius: 2px;
-        }
-
-        .outgoing {
-            background: #effdde;
-            align-self: flex-end;
-            border-bottom-right-radius: 2px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        /* Input qismi */
-        .chat-input-area {
-            padding: 15px;
-            background: white;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        #message-input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            outline: none;
-        }
-
-        #send-btn {
-            background: #3390ec;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        #send-btn:hover {
-            background: #2b7cc9;
-        }
+        body { margin: 0; overflow: hidden; background-color: #111; }
+        canvas { display: block; }
     </style>
 </head>
 <body>
 
-    <div class="telegram-wrapper">
-        <div class="contacts-panel">
-            <div class="header">Telegram</div>
-            <div class="contact-item active">Ali</div>
-            <div class="contact-item">Vali</div>
-            <div class="contact-item">Sardor</div>
-            <div class="contact-item">Diyor</div>
-        </div>
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+    }
+  }
+</script>
 
-        <div class="chat-panel">
-            <div class="chat-header" id="current-chat-name">Ali</div>
+<script type="module">
+    import * as THREE from 'three';
+
+    // 1. Sahna va Kamera sozlamalari
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // 2. Yorug'lik
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xffffff, 1);
+    pointLight.position.set(5, 5, 5);
+    scene.add(pointLight);
+
+    // 3. Cube Klassi (Rasmda ko'rsatilgan mantiq asosida)
+    class RubiksCube {
+        constructor() {
+            this.group = new THREE.Group();
+            this.pieces = [];
+            this.generateCube();
+            scene.add(this.group);
+        }
+
+        generateCube() {
+            const size = 1.0;
+            const gap = 0.1;
             
-            <div id="chat-messages" class="messages-container">
-                <div class="message incoming">Salom! JavaScript darslari qanday ketyapti?</div>
-                <div class="message outgoing">Zo'r! Hozir Telegram interfeysini yasayapman.</div>
-            </div>
+            // 3x3x3 bo'lakchalarni yaratish
+            for (let x = -1; x <= 1; x++) {
+                for (let y = -1; y <= 1; y++) {
+                    for (let z = -1; z <= 1; z++) {
+                        const geometry = new THREE.BoxGeometry(size, size, size);
+                        
+                        // Har bir tomon uchun ranglar
+                        const materials = [
+                            new THREE.MeshLambertMaterial({ color: 0xff0000 }), // O'ng
+                            new THREE.MeshLambertMaterial({ color: 0xffa500 }), // Chap
+                            new THREE.MeshLambertMaterial({ color: 0xffffff }), // Yuqori
+                            new THREE.MeshLambertMaterial({ color: 0xffff00 }), // Past
+                            new THREE.MeshLambertMaterial({ color: 0x00ff00 }), // Oldi
+                            new THREE.MeshLambertMaterial({ color: 0x0000ff })  // Orqa
+                        ];
 
-            <div class="chat-input-area">
-                <input type="text" id="message-input" placeholder="Xabar yozing..." autocomplete="off">
-                <button id="send-btn">YUBORISH</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // JS - Funksionallik qismi
-        const sendBtn = document.getElementById('send-btn');
-        const messageInput = document.getElementById('message-input');
-        const chatMessages = document.getElementById('chat-messages');
-
-        // Xabar yuborish funksiyasi
-        function sendMessage() {
-            const text = messageInput.value.trim();
-            
-            if (text !== "") {
-                // Yangi xabar elementi
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', 'outgoing');
-                messageDiv.innerText = text;
-                
-                // Chat oynasiga qo'shish
-                chatMessages.appendChild(messageDiv);
-                
-                // Inputni tozalash
-                messageInput.value = "";
-                
-                // Har doim eng oxirgi xabarga tushish
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                        const piece = new THREE.Mesh(geometry, materials);
+                        piece.position.set(
+                            x * (size + gap),
+                            y * (size + gap),
+                            z * (size + gap)
+                        );
+                        
+                        this.group.add(piece);
+                        this.pieces.push(piece);
+                    }
+                }
             }
         }
 
-        // Tugma bosilganda yuborish
-        sendBtn.addEventListener('click', sendMessage);
+        update() {
+            // Kubni sekin aylantirib turish
+            this.group.rotation.y += 0.01;
+            this.group.rotation.x += 0.005;
+        }
+    }
 
-        // Enter bosilganda yuborish
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
+    const cube = new RubiksCube();
+    camera.position.z = 8;
 
-        // Kontaktlarni almashtirish (oddiy vizual effekt)
-        const contacts = document.querySelectorAll('.contact-item');
-        contacts.forEach(contact => {
-            contact.addEventListener('click', () => {
-                document.querySelector('.contact-item.active').classList.remove('active');
-                contact.classList.add('active');
-                document.getElementById('current-chat-name').innerText = contact.innerText;
-                chatMessages.innerHTML = `<div class="message incoming">${contact.innerText} bilan chat boshlandi...</div>`;
-            });
-        });
-    </script>
+    // 4. Animatsiya sikli
+    function animate() {
+        requestAnimationFrame(animate);
+        cube.update();
+        renderer.render(scene, camera);
+    }
 
+    // Oyna o'lchami o'zgarganda moslashish
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+</script>
 </body>
 </html>

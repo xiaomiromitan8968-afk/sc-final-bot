@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Trading Backtest Log</title>
+    <title>Neon Trading Log + PDF Export</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
         :root {
             --bg-color: #0a0a0c;
@@ -15,141 +18,37 @@
             --card-bg: #16161a;
         }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h1 {
-            color: var(--neon-cyan);
-            text-shadow: 0 0 10px var(--neon-cyan);
-            margin-bottom: 30px;
-        }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Segoe UI', sans-serif; margin: 20px; display: flex; flex-direction: column; align-items: center; }
+        h1 { color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); }
 
         .form-container {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid var(--neon-magenta);
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.2);
-            width: 95%;
-            max-width: 1100px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
+            background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--neon-magenta);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.2); width: 95%; max-width: 1100px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px;
         }
 
-        .input-group {
-            display: flex;
-            flex-direction: column;
-        }
+        .input-group { display: flex; flex-direction: column; }
+        label { font-size: 12px; margin-bottom: 5px; color: var(--neon-cyan); }
+        input, select, textarea { background: #222; border: 1px solid #444; color: white; padding: 8px; border-radius: 5px; outline: none; }
+        
+        .buttons-area { grid-column: 1 / -1; display: flex; gap: 10px; }
+        button { flex: 1; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.3s; text-transform: uppercase; background: transparent; }
+        
+        .btn-add { color: var(--neon-green); border: 2px solid var(--neon-green); }
+        .btn-add:hover { background: var(--neon-green); color: black; box-shadow: 0 0 20px var(--neon-green); }
+        
+        .btn-pdf { color: var(--neon-cyan); border: 2px solid var(--neon-cyan); }
+        .btn-pdf:hover { background: var(--neon-cyan); color: black; box-shadow: 0 0 20px var(--neon-cyan); }
 
-        label {
-            font-size: 12px;
-            margin-bottom: 5px;
-            color: var(--neon-cyan);
-        }
-
-        input, select, textarea {
-            background: #222;
-            border: 1px solid #444;
-            color: white;
-            padding: 8px;
-            border-radius: 5px;
-            outline: none;
-        }
-
-        input:focus {
-            border-color: var(--neon-cyan);
-            box-shadow: 0 0 5px var(--neon-cyan);
-        }
-
-        button {
-            grid-column: 1 / -1;
-            background: transparent;
-            color: var(--neon-green);
-            border: 2px solid var(--neon-green);
-            padding: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: 0.3s;
-            text-transform: uppercase;
-        }
-
-        button:hover {
-            background: var(--neon-green);
-            color: black;
-            box-shadow: 0 0 20px var(--neon-green);
-        }
-
-        .table-container {
-            width: 95%;
-            max-width: 1200px;
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--card-bg);
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid #333;
-        }
-
-        th {
-            background: #1f1f25;
-            color: var(--neon-magenta);
-            padding: 15px;
-            text-align: left;
-            border-bottom: 2px solid #333;
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #222;
-            font-size: 14px;
-        }
-
+        .table-container { width: 95%; max-width: 1200px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 10px; overflow: hidden; border: 1px solid #333; }
+        th { background: #1f1f25; color: var(--neon-magenta); padding: 15px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #222; font-size: 14px; }
         .buy-text { color: var(--neon-green); font-weight: bold; }
         .sell-text { color: var(--neon-red); font-weight: bold; }
-
-        .screenshot-img {
-            width: 80px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: 4px;
-            cursor: pointer;
-            border: 1px solid var(--neon-cyan);
-        }
-
-        .screenshot-img:hover {
-            transform: scale(3);
-            position: relative;
-            z-index: 10;
-            transition: 0.2s;
-        }
-
-        .delete-btn {
-            background: none;
-            border: 1px solid var(--neon-red);
-            color: var(--neon-red);
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 3px;
-        }
-
-        .delete-btn:hover {
-            background: var(--neon-red);
-            color: white;
-        }
+        
+        .screenshot-img { width: 60px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid var(--neon-cyan); }
+        .delete-btn { background: none; border: 1px solid var(--neon-red); color: var(--neon-red); cursor: pointer; padding: 5px 10px; }
     </style>
 </head>
 <body>
@@ -157,71 +56,31 @@
     <h1>NEON BACKTEST LOG</h1>
 
     <div class="form-container">
-        <div class="input-group">
-            <label>Sana / Vaqt</label>
-            <input type="datetime-local" id="tradeDate">
+        <div class="input-group"><label>Sana</label><input type="datetime-local" id="tradeDate"></div>
+        <div class="input-group"><label>Juftlik</label><input type="text" id="pair" placeholder="BTC/USDT"></div>
+        <div class="input-group"><label>Tur</label><select id="type"><option value="BUY">BUY</option><option value="SELL">SELL</option></select></div>
+        <div class="input-group"><label>Kirish</label><input type="number" id="entry" step="any"></div>
+        <div class="input-group"><label>SL</label><input type="number" id="sl" step="any"></div>
+        <div class="input-group"><label>TP</label><input type="number" id="tp" step="any"></div>
+        <div class="input-group"><label>Natija (%)</label><input type="text" id="result"></div>
+        <div class="input-group"><label>R:R</label><input type="text" id="rr" placeholder="1:3"></div>
+        <div class="input-group" style="grid-column: span 2;"><label>Izoh</label><textarea id="comment" rows="1"></textarea></div>
+        <div class="input-group"><label>Screenshot</label><input type="file" id="screenshot" accept="image/*"></div>
+        
+        <div class="buttons-area">
+            <button class="btn-add" onclick="addTrade()">Saqlash</button>
+            <button class="btn-pdf" onclick="downloadPDF()">PDF Yuklash</button>
         </div>
-        <div class="input-group">
-            <label>Savdo juftligi</label>
-            <input type="text" id="pair" placeholder="Masalan: BTC/USDT">
-        </div>
-        <div class="input-group">
-            <label>Signal turi</label>
-            <select id="type">
-                <option value="BUY">BUY</option>
-                <option value="SELL">SELL</option>
-            </select>
-        </div>
-        <div class="input-group">
-            <label>Kirish narxi</label>
-            <input type="number" id="entry" step="any">
-        </div>
-        <div class="input-group">
-            <label>Stop Loss</label>
-            <input type="number" id="sl" step="any">
-        </div>
-        <div class="input-group">
-            <label>Take Profit</label>
-            <input type="number" id="tp" step="any">
-        </div>
-        <div class="input-group">
-            <label>Natija (Pips/%)</label>
-            <input type="text" id="result">
-        </div>
-        <div class="input-group">
-            <label>R:R nisbati</label>
-            <input type="text" id="rr" placeholder="Masalan: 1:3">
-        </div>
-        <div class="input-group" style="grid-column: span 2;">
-            <label>Izoh</label>
-            <textarea id="comment" rows="1"></textarea>
-        </div>
-        <div class="input-group">
-            <label>Screenshot</label>
-            <input type="file" id="screenshot" accept="image/*">
-        </div>
-        <button onclick="addTrade()">Jadvalga qo'shish</button>
     </div>
 
     <div class="table-container">
-        <table id="tradeTable">
+        <table>
             <thead>
                 <tr>
-                    <th>№</th>
-                    <th>Sana</th>
-                    <th>Juftlik</th>
-                    <th>Tur</th>
-                    <th>Kirish</th>
-                    <th>SL / TP</th>
-                    <th>Natija</th>
-                    <th>R:R</th>
-                    <th>Izoh</th>
-                    <th>Rasm</th>
-                    <th>Amal</th>
+                    <th>№</th><th>Sana</th><th>Juftlik</th><th>Tur</th><th>Kirish</th><th>SL/TP</th><th>Natija</th><th>R:R</th><th>Izoh</th><th>Rasm</th><th>Amal</th>
                 </tr>
             </thead>
-            <tbody id="tableBody">
-                </tbody>
+            <tbody id="tableBody"></tbody>
         </table>
     </div>
 
@@ -231,7 +90,6 @@
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
-            
             trades.forEach((trade, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -240,11 +98,11 @@
                     <td>${trade.pair}</td>
                     <td class="${trade.type === 'BUY' ? 'buy-text' : 'sell-text'}">${trade.type}</td>
                     <td>${trade.entry}</td>
-                    <td style="font-size: 11px;">SL: ${trade.sl}<br>TP: ${trade.tp}</td>
+                    <td>${trade.sl} / ${trade.tp}</td>
                     <td>${trade.result}</td>
                     <td>${trade.rr}</td>
-                    <td style="max-width: 150px; overflow: hidden;">${trade.comment}</td>
-                    <td>${trade.img ? `<img src="${trade.img}" class="screenshot-img">` : 'Yo'q'}</td>
+                    <td>${trade.comment}</td>
+                    <td>${trade.img ? `<img src="${trade.img}" class="screenshot-img" onclick="window.open('${trade.img}')">` : '-'}</td>
                     <td><button class="delete-btn" onclick="deleteTrade(${index})">X</button></td>
                 `;
                 tbody.appendChild(row);
@@ -261,42 +119,63 @@
 
             const newTrade = {
                 date: document.getElementById('tradeDate').value.replace('T', ' '),
-                pair: document.getElementById('pair').value,
+                pair: document.getElementById('pair').value || '-',
                 type: document.getElementById('type').value,
-                entry: document.getElementById('entry').value,
-                sl: document.getElementById('sl').value,
-                tp: document.getElementById('tp').value,
-                result: document.getElementById('result').value,
-                rr: document.getElementById('rr').value,
-                comment: document.getElementById('comment').value,
+                entry: document.getElementById('entry').value || '0',
+                sl: document.getElementById('sl').value || '0',
+                tp: document.getElementById('tp').value || '0',
+                result: document.getElementById('result').value || '-',
+                rr: document.getElementById('rr').value || '-',
+                comment: document.getElementById('comment').value || '-',
                 img: base64Img
             };
 
             trades.push(newTrade);
-            localStorage.setItem('myTrades', JSON.stringify(trades));
+            try {
+                localStorage.setItem('myTrades', JSON.stringify(trades));
+            } catch (e) {
+                alert("Xotira to'ldi! Iltimos eski rasmli savdolarni o'chiring.");
+            }
             renderTable();
-            clearInputs();
-        }
-
-        const toBase64 = file => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
-
-        function deleteTrade(index) {
-            trades.splice(index, 1);
-            localStorage.setItem('myTrades', JSON.stringify(trades));
-            renderTable();
-        }
-
-        function clearInputs() {
-            document.querySelectorAll('input').forEach(input => input.value = '');
+            // Formani tozalash
+            document.querySelectorAll('input').forEach(i => i.value = '');
             document.querySelector('textarea').value = '';
         }
 
-        // Dastlabki yuklash
+        const toBase64 = file => new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+        });
+
+        function deleteTrade(index) {
+            if(confirm("O'chirilsinmi?")) {
+                trades.splice(index, 1);
+                localStorage.setItem('myTrades', JSON.stringify(trades));
+                renderTable();
+            }
+        }
+
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Albom ko'rinishida
+
+            doc.text("Backtest Savdo Jurnali", 14, 15);
+            
+            const tableData = trades.map((t, i) => [
+                i + 1, t.date, t.pair, t.type, t.entry, `${t.sl}/${t.tp}`, t.result, t.rr, t.comment
+            ]);
+
+            doc.autoTable({
+                head: [['№', 'Sana', 'Juftlik', 'Tur', 'Kirish', 'SL/TP', 'Natija', 'R:R', 'Izoh']],
+                body: tableData,
+                startY: 20,
+                theme: 'grid'
+            });
+
+            doc.save('backtest-report.pdf');
+        }
+
         renderTable();
     </script>
 </body>

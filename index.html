@@ -3,180 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Trading Log + PDF Export</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    
+    <title>JARVIS SYSTEM - SC_ MALIKOV</title>
     <style>
-        :root {
-            --bg-color: #0a0a0c;
-            --neon-cyan: #00f3ff;
-            --neon-magenta: #ff00ff;
-            --neon-green: #39ff14;
-            --neon-red: #ff3131;
-            --text-color: #e0e0e0;
-            --card-bg: #16161a;
+        body {
+            margin: 0;
+            background-color: #000;
+            color: #00e5ff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            text-transform: uppercase;
         }
 
-        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Segoe UI', sans-serif; margin: 20px; display: flex; flex-direction: column; align-items: center; }
-        h1 { color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); }
-
-        .form-container {
-            background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--neon-magenta);
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.2); width: 95%; max-width: 1100px;
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px;
+        /* HUD (Head-Up Display) qatlamlari */
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            border: 2px solid rgba(0, 229, 255, 0.1);
+            box-sizing: border-box;
+            z-index: 10;
         }
 
-        .input-group { display: flex; flex-direction: column; }
-        label { font-size: 12px; margin-bottom: 5px; color: var(--neon-cyan); }
-        input, select, textarea { background: #222; border: 1px solid #444; color: white; padding: 8px; border-radius: 5px; outline: none; }
-        
-        .buttons-area { grid-column: 1 / -1; display: flex; gap: 10px; }
-        button { flex: 1; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.3s; text-transform: uppercase; background: transparent; }
-        
-        .btn-add { color: var(--neon-green); border: 2px solid var(--neon-green); }
-        .btn-add:hover { background: var(--neon-green); color: black; box-shadow: 0 0 20px var(--neon-green); }
-        
-        .btn-pdf { color: var(--neon-cyan); border: 2px solid var(--neon-cyan); }
-        .btn-pdf:hover { background: var(--neon-cyan); color: black; box-shadow: 0 0 20px var(--neon-cyan); }
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            letter-spacing: 3px;
+        }
 
-        .table-container { width: 95%; max-width: 1200px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 10px; overflow: hidden; border: 1px solid #333; }
-        th { background: #1f1f25; color: var(--neon-magenta); padding: 15px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #222; font-size: 14px; }
-        .buy-text { color: var(--neon-green); font-weight: bold; }
-        .sell-text { color: var(--neon-red); font-weight: bold; }
-        
-        .screenshot-img { width: 60px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid var(--neon-cyan); }
-        .delete-btn { background: none; border: 1px solid var(--neon-red); color: var(--neon-red); cursor: pointer; padding: 5px 10px; }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 300;
+            text-shadow: 0 0 10px #00e5ff;
+        }
+
+        .brand {
+            color: #ff0055;
+            font-weight: bold;
+        }
+
+        .status-box {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            text-align: right;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .scanner {
+            position: absolute;
+            top: 50%;
+            left: 30px;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: rgba(0, 229, 255, 0.5);
+        }
+
+        /* Ovoz to'lqini vizualizatsiyasi uchun joy */
+        #visualizer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .bar {
+            width: 3px;
+            background: #00e5ff;
+            box-shadow: 0 0 5px #00e5ff;
+            transition: height 0.1s;
+        }
     </style>
 </head>
 <body>
 
-    <h1>NEON BACKTEST LOG</h1>
-
-    <div class="form-container">
-        <div class="input-group"><label>Sana</label><input type="datetime-local" id="tradeDate"></div>
-        <div class="input-group"><label>Juftlik</label><input type="text" id="pair" placeholder="BTC/USDT"></div>
-        <div class="input-group"><label>Tur</label><select id="type"><option value="BUY">BUY</option><option value="SELL">SELL</option></select></div>
-        <div class="input-group"><label>Kirish</label><input type="number" id="entry" step="any"></div>
-        <div class="input-group"><label>SL</label><input type="number" id="sl" step="any"></div>
-        <div class="input-group"><label>TP</label><input type="number" id="tp" step="any"></div>
-        <div class="input-group"><label>Natija (%)</label><input type="text" id="result"></div>
-        <div class="input-group"><label>R:R</label><input type="text" id="rr" placeholder="1:3"></div>
-        <div class="input-group" style="grid-column: span 2;"><label>Izoh</label><textarea id="comment" rows="1"></textarea></div>
-        <div class="input-group"><label>Screenshot</label><input type="file" id="screenshot" accept="image/*"></div>
-        
-        <div class="buttons-area">
-            <button class="btn-add" onclick="addTrade()">Saqlash</button>
-            <button class="btn-pdf" onclick="downloadPDF()">PDF Yuklash</button>
+    <div id="ui-overlay">
+        <div class="header">
+            <h1>JARVIS <span class="brand">SC_ MALIKOV</span></h1>
+            <div id="date-time">SYSTEM ONLINE...</div>
         </div>
+
+        <div class="scanner">
+            CORE_TEMP: 42°C<br>
+            NEURAL_LINK: STABLE<br>
+            XAUUSD_ANALYSIS: WAITING...<br>
+            SMC_ZONE: MITIGATED
+        </div>
+
+        <div class="status-box">
+            PROTOCOL: PARADOX JARVIS ZERO<br>
+            LOCATION: TASHKENT, UZ<br>
+            ENCRYPTION: AES-256
+        </div>
+
+        <div id="visualizer">
+            </div>
     </div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>№</th><th>Sana</th><th>Juftlik</th><th>Tur</th><th>Kirish</th><th>SL/TP</th><th>Natija</th><th>R:R</th><th>Izoh</th><th>Rasm</th><th>Amal</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
 
-    <script>
-        let trades = JSON.parse(localStorage.getItem('myTrades')) || [];
+    <script type="module">
+        import * as THREE from 'three';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
-        function renderTable() {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            trades.forEach((trade, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${trade.date}</td>
-                    <td>${trade.pair}</td>
-                    <td class="${trade.type === 'BUY' ? 'buy-text' : 'sell-text'}">${trade.type}</td>
-                    <td>${trade.entry}</td>
-                    <td>${trade.sl} / ${trade.tp}</td>
-                    <td>${trade.result}</td>
-                    <td>${trade.rr}</td>
-                    <td>${trade.comment}</td>
-                    <td>${trade.img ? `<img src="${trade.img}" class="screenshot-img" onclick="window.open('${trade.img}')">` : '-'}</td>
-                    <td><button class="delete-btn" onclick="deleteTrade(${index})">X</button></td>
-                `;
-                tbody.appendChild(row);
+        // 1. SAHNA SOZLAMALARI
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // 2. NEON GLOW (BLOOM) EFFEKTI
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            1.5, // Bloom kuchi
+            0.4, // Radius
+            0.85 // Threshold
+        );
+        
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        // 3. JARVIS HALQALARI (GEOMETRIYA)
+        const ringGroup = new THREE.Group();
+        scene.add(ringGroup);
+
+        const createRing = (radius, tube, color, rotationSpeed) => {
+            const geometry = new THREE.TorusGeometry(radius, tube, 16, 100);
+            const material = new THREE.MeshBasicMaterial({ 
+                color: color, 
+                wireframe: true,
+                transparent: true,
+                opacity: 0.6
             });
+            const ring = new THREE.Mesh(geometry, material);
+            ring.userData = { speed: rotationSpeed };
+            return ring;
+        };
+
+        // Turli xil halqalar qo'shish
+        const ring1 = createRing(8, 0.02, 0x00e5ff, 0.01);
+        const ring2 = createRing(10, 0.05, 0x0088ff, -0.005);
+        const ring3 = createRing(12, 0.01, 0xff0055, 0.02);
+        
+        ring2.rotation.x = Math.PI / 2;
+        ring3.rotation.y = Math.PI / 4;
+
+        ringGroup.add(ring1, ring2, ring3);
+
+        // Markaziy gologramma nuqtasi
+        const coreGeo = new THREE.IcosahedronGeometry(1, 1);
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, wireframe: true });
+        const core = new THREE.Mesh(coreGeo, coreMat);
+        scene.add(core);
+
+        camera.position.z = 25;
+
+        // 4. DINAMIK INTERFEYS ELEMENTLARI
+        const visualizer = document.getElementById('visualizer');
+        for (let i = 0; i < 20; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.height = '10px';
+            visualizer.appendChild(bar);
         }
 
-        async function addTrade() {
-            const fileInput = document.getElementById('screenshot');
-            let base64Img = "";
+        const updateVisualizer = () => {
+            const bars = document.querySelectorAll('.bar');
+            bars.forEach(bar => {
+                const height = Math.random() * 40 + 5;
+                bar.style.height = `${height}px`;
+            });
+        };
 
-            if (fileInput.files[0]) {
-                base64Img = await toBase64(fileInput.files[0]);
-            }
+        // 5. ANIMATSIYA TSIKLI
+        function animate() {
+            requestAnimationFrame(animate);
 
-            const newTrade = {
-                date: document.getElementById('tradeDate').value.replace('T', ' '),
-                pair: document.getElementById('pair').value || '-',
-                type: document.getElementById('type').value,
-                entry: document.getElementById('entry').value || '0',
-                sl: document.getElementById('sl').value || '0',
-                tp: document.getElementById('tp').value || '0',
-                result: document.getElementById('result').value || '-',
-                rr: document.getElementById('rr').value || '-',
-                comment: document.getElementById('comment').value || '-',
-                img: base64Img
-            };
+            // Halqalarni aylantirish
+            ring1.rotation.z += ring1.userData.speed;
+            ring2.rotation.x += ring2.userData.speed;
+            ring3.rotation.y += ring3.userData.speed;
+            
+            core.rotation.y += 0.02;
 
-            trades.push(newTrade);
-            try {
-                localStorage.setItem('myTrades', JSON.stringify(trades));
-            } catch (e) {
-                alert("Xotira to'ldi! Iltimos eski rasmli savdolarni o'chiring.");
-            }
-            renderTable();
-            // Formani tozalash
-            document.querySelectorAll('input').forEach(i => i.value = '');
-            document.querySelector('textarea').value = '';
+            // Vizualizatorni yangilash
+            if (Math.random() > 0.8) updateVisualizer();
+
+            // Oddiy renderer o'rniga composer ishlatiladi (Bloom uchun)
+            composer.render();
         }
 
-        const toBase64 = file => new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
+        // Oynani o'zgartirganda moslashish
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        function deleteTrade(index) {
-            if(confirm("O'chirilsinmi?")) {
-                trades.splice(index, 1);
-                localStorage.setItem('myTrades', JSON.stringify(trades));
-                renderTable();
-            }
-        }
+        animate();
 
-        function downloadPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // Albom ko'rinishida
+        // Vaqtni yangilab turish
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('date-time').innerText = now.toLocaleString();
+        }, 1000);
 
-            doc.text("Backtest Savdo Jurnali", 14, 15);
-            
-            const tableData = trades.map((t, i) => [
-                i + 1, t.date, t.pair, t.type, t.entry, `${t.sl}/${t.tp}`, t.result, t.rr, t.comment
-            ]);
-
-            doc.autoTable({
-                head: [['№', 'Sana', 'Juftlik', 'Tur', 'Kirish', 'SL/TP', 'Natija', 'R:R', 'Izoh']],
-                body: tableData,
-                startY: 20,
-                theme: 'grid'
-            });
-
-            doc.save('backtest-report.pdf');
-        }
-
-        renderTable();
     </script>
 </body>
 </html>

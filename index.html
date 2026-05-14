@@ -127,7 +127,7 @@
             left: 100%;
         }
 
-.menu-btn:hover {
+        .menu-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
             border-color: #ff00ff; /* Hoverda neon pushti */
@@ -265,7 +265,7 @@
             opacity: 1;
         }
 
-.modal-content {
+        .modal-content {
             max-width: 95vw;
             max-height: 90vh;
             border-radius: 15px;
@@ -345,7 +345,7 @@
             Avtobiografiya shu yerda bo'ladi...
         </div>
 
-<!-- DADAM UCHUN QO'SHIMCHA RASMLAR (Boshqalar uchun yashiriladi) -->
+        <!-- DADAM UCHUN QO'SHIMCHA RASMLAR (Boshqalar uchun yashiriladi) -->
         <div id="dadExtraPhotos" class="extra-photos-container">
             <!-- Rasmlar internetdan olingan placeholderlar -->
             <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop" class="extra-photo fallback-img" alt="Dad Extra 1" onclick="openImageModal(this.src)">
@@ -402,8 +402,7 @@
             men: {
                 name: "Men",
                 image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop",
-
-bio: "Men ushbu mo'jazgina ilova yaratuvchisi va shu ajoyib oilaning a'zosiman. Texnologiyalar, dasturlash va ijod qilishga qiziqaman. Eng katta boyligim — bu mening oilam. Shu sababli bu mitti xotira ilovasini yaratishga qaror qildim."
+                bio: "Men ushbu mo'jazgina ilova yaratuvchisi va shu ajoyib oilaning a'zosiman. Texnologiyalar, dasturlash va ijod qilishga qiziqaman. Eng katta boyligim — bu mening oilam. Shu sababli bu mitti xotira ilovasini yaratishga qaror qildim."
             }
         };
 
@@ -475,7 +474,7 @@ bio: "Men ushbu mo'jazgina ilova yaratuvchisi va shu ajoyib oilaning a'zosiman. 
             const extraPhotosContainer = document.getElementById('dadExtraPhotos');
             const scrollHint = document.getElementById('scrollHint');
 
-// Agar tanlangan kishi "dadam" bo'lsa
+            // Agar tanlangan kishi "dadam" bo'lsa
             if (memberKey === 'dadam') {
                 extraPhotosContainer.style.display = 'flex';
                 extraPhotosContainer.classList.remove('visible'); // Boshida ko'rinmas
@@ -513,4 +512,34 @@ bio: "Men ushbu mo'jazgina ilova yaratuvchisi va shu ajoyib oilaning a'zosiman. 
                     img.src = src;
                     img.className = 'gallery-item fallback-img';
                     img.alt = 'Oilaviy Rasm ' + (index + 1);
-                    // Galereyadagi ra
+                    // Galereyadagi rasmlarni bosganda kattalashadigan qilish
+                    img.onclick = () => openImageModal(src);
+                    galleryGrid.appendChild(img);
+                }, index * 200); // Har bir rasm 200ms farq bilan chiqadi
+            });
+        }
+
+        // --- RASMNI KATTALASHTIRISH FUNKSIYALARI ---
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImg');
+            modalImg.src = src;
+            modal.classList.add('active');
+        }
+
+        function closeImageModal(event) {
+            // Agar foydalanuvchi aynan rasmning o'ziga bosa, yopilmasin
+            if (event && event.target.id === 'modalImg') {
+                return;
+            }
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('active');
+            
+            // Animatsiya tugagach rasmni tozalab turamiz
+            setTimeout(() => {
+                document.getElementById('modalImg').src = "";
+            }, 400);
+        }
+    </script>
+</body>
+</html>

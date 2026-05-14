@@ -186,7 +186,7 @@
             font-size: 16px;
         }
 
-        /* Dadam uchun qo'shimcha rasmlar animatsiyasi */
+        /* QO'SHIMCHA RASMLAR ANIMATSIYASI (Eski dizayn saqlangan) */
         .extra-photos-container {
             display: flex;
             justify-content: center;
@@ -210,10 +210,10 @@
             object-fit: cover;
             border: 2px solid #555;
             transition: transform 0.3s;
+            cursor: pointer;
         }
         .extra-photo:hover { transform: scale(1.1); }
         
-        /* Mobil uchun rasm o'lchami */
         @media (min-width: 768px) {
             .extra-photo { width: 150px; height: 150px; }
             .profile-image { width: 250px; height: 250px; }
@@ -237,6 +237,7 @@
             opacity: 0;
             transform: scale(0.8);
             animation: popIn 0.5s ease forwards;
+            cursor: pointer;
         }
 
         @keyframes popIn {
@@ -272,7 +273,7 @@
             object-fit: contain;
             box-shadow: 0 0 40px rgba(0, 255, 255, 0.4);
             transform: scale(0.5);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Sakrash (bounce) effekti */
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .image-modal.active .modal-content {
@@ -295,23 +296,15 @@
             color: #ff00ff;
             transform: scale(1.2);
         }
-
-        /* Barcha rasmlarni bosish mumkin qilib ko'rsatish */
-        .profile-image, .extra-photo, .gallery-item {
-            cursor: pointer;
-        }
-
     </style>
 </head>
 <body>
 
-    <!-- YASHIRIN MUSIQA FAYLI (Placeholder url, brauzer ruxsat so'rashi mumkin) -->
-    <!-- Xavfsizlik va ruxsatlar sababli bu yerda jimjitlik emas, sokin musiqa ssilkasi qo'yilgan -->
     <audio id="bgMusic" loop>
-        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=ambient-piano-amp-strings-10711.mp3" type="audio/mpeg">
+        <source src="musiqa.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- 1. DASTLABKI EKRAN (Intro) -->
+    <!-- 1. DASTLABKI EKRAN -->
     <div id="introScreen" class="gradient-bg">
         <button class="neon-button" onclick="startApp()">Mening Oilam</button>
     </div>
@@ -327,82 +320,94 @@
             <button class="menu-btn" onclick="openProfile('akam')">Akam</button>
             <button class="menu-btn" onclick="openProfile('opam')">Opam</button>
             <button class="menu-btn" onclick="openProfile('men')">Men</button>
-            
             <button class="menu-btn family-btn" onclick="openGallery()">Mening Oilam</button>
         </div>
     </div>
 
-    <!-- 3. PROFIL EKRANI (Dinamik o'zgaradi) -->
+    <!-- 3. PROFIL EKRANI (Umumiy) -->
     <div id="profileScreen" class="screen">
         <button class="back-btn" onclick="goBackToMenu()"><i class="fa-solid fa-arrow-left"></i></button>
         
-        <!-- Dinamik Ma'lumotlar shu yerga tushadi -->
         <h2 id="profileName" class="text-3xl text-center mt-12 font-bold text-white tracking-wider">Ism</h2>
-        
-        <img id="profileMainImg" src="" alt="Profile" class="profile-image fallback-img">
-        
-        <div id="profileBio" class="bio-text">
-            Avtobiografiya shu yerda bo'ladi...
-        </div>
+        <img id="profileMainImg" src="" alt="Profile" class="profile-image">
+        <div id="profileBio" class="bio-text"></div>
 
-        <!-- DADAM UCHUN QO'SHIMCHA RASMLAR (Boshqalar uchun yashiriladi) -->
-        <div id="dadExtraPhotos" class="extra-photos-container">
-            <!-- Rasmlar internetdan olingan placeholderlar -->
-            <img src="rasim2.jpg" class="extra-photo fallback-img" alt="rasim2.jpg" onclick="openImageModal(this.src)">
-            <img src="rasim3.jpg" class="extra-photo fallback-img" alt="rasim3.jpg" onclick="openImageModal(this.src)">
-            <img src="rasim4.jpg" class="extra-photo fallback-img" alt="rasim4.jpg" onclick="openImageModal(this.src)">
+        <!-- HAMMA UCHUN QO'SHIMCHA RASMLAR KONTEYNERI -->
+        <div id="extraPhotosContainer" class="extra-photos-container">
+            <!-- JavaScript orqali to'ldiriladi -->
         </div>
         
-        <!-- Pastga tushishni bildirish uchun belgi (faqat dadamda ko'rinadi) -->
         <div id="scrollHint" class="text-center mt-10 mb-20 text-gray-500 animate-bounce hidden">
             <i class="fa-solid fa-chevron-down text-2xl"></i><br>
             <span class="text-sm">Pastga suring</span>
         </div>
     </div>
 
-    <!-- 4. UMUMIY GALEREYA EKRANI -->
+    <!-- 4. UMUMIY GALEREYA -->
     <div id="galleryScreen" class="screen">
          <button class="back-btn" onclick="goBackToMenu()"><i class="fa-solid fa-arrow-left"></i></button>
          <h2 class="text-3xl text-center mt-12 font-bold text-[#00ffff] tracking-wider mb-8">Oilaviy Xotiralar</h2>
-         
-         <div class="gallery-container" id="galleryGrid">
-            <!-- JavaScript orqali animatsiya bilan qo'shiladi -->
-         </div>
+         <div class="gallery-container" id="galleryGrid"></div>
     </div>
 
-    <!-- 5. KATTALASHTIRILGAN RASM EKRANI (Modal) -->
+    <!-- 5. KATTALASHTIRILGAN RASM MODAL -->
     <div id="imageModal" class="image-modal" onclick="closeImageModal(event)">
         <span class="close-modal" onclick="closeImageModal(event)"><i class="fa-solid fa-xmark"></i></span>
         <img id="modalImg" class="modal-content" src="">
     </div>
 
     <script>
-        // --- MA'LUMOTLAR BAZASI (O'zgartirishingiz mumkin) ---
+        // --- MA'LUMOTLAR BAZASI (Hamma uchun 3 tadan rasm qo'shildi) ---
         const familyData = {
             dadam: {
                 name: "Axmadxo'jayev Saidxo'ja Xamzayevich",
                 image: "rasim1.jpg",
-                bio: "Bizning oilamiz boshi bu dadajonim. Dadajonim Axmadxo'jayev Saidxo'ja Xamzayevich 1971-yil 28-yanvar kuni Toshkent viloyatining Said qishlog'ida tug'ilgan. Maktabni bitirgach texnikumda o'gan va 2 yil harbiy hizmatni õtab kelgan keyin ishga joylashgach oyijonimga uylangan🥰 hozirda baxtlimiz. Dadajonimdan mehnatkashlikni, ochiqqo'llikni, yordam kerak bo'lgan insonlarga yordam berishlikni va eng asosiysi halollikni o'rganganmiz. Shuni aytib o'tishim joiz deb o'yladim dadajonim 2025-yil may oyida qilgan mehnatlari va fidoiyliklari uchun Shuhrat medali bilan omma oldida taqdirlangan va shu yoshigacha ko'lab gazeta va jurnallarda rasmlari chop etilgan. Bizga tõg'ri yo'l ko'rsatgan dadajonimga rahmat aytaman.🫀"
+                bio: "Bizning oilamiz boshi bu dadajonim. Dadajonim Axmadxo'jayev Saidxo'ja Xamzayevich 1971-yil 28-yanvar kuni Toshkent viloyatining Said qishlog'ida tug'ilgan. Maktabni bitirgach texnikumda o'gan va 2 yil harbiy hizmatni õtab kelgan keyin ishga joylashgach oyijonimga uylangan🥰 hozirda baxtlimiz. Dadajonimdan mehnatkashlikni, ochiqqo'llikni, yordam kerak bo'lgan insonlarga yordam berishlikni va eng asosiysi halollikni o'rganganmiz. Shuni aytib o'tishim joiz deb o'yladim dadajonim 2025-yil may oyida qilgan mehnatlari va fidoiyliklari uchun Shuhrat medali bilan omma oldida taqdirlangan va shu yoshigacha ko'lab gazeta va jurnallarda rasmlari chop etilgan. Bizga tõg'ri yo'l ko'rsatgan dadajonimga rahmat aytaman.🫀",
+                extra: [
+                    "rasim2.jpg",
+                    "rasim3.jpg",
+                    "rasim4.jpg"
+                ]
             },
             oyim: {
                 name: "Axmadxo'jayeva Muqaddasxon Yo'ldoshevna",
                 image: "rasim11.jpg",
-                bio: "Oyijonim Axmadxo'jayeva Muqaddasxon Yo'ldoshevna 1973-yil 26-iyul kuni Toshkent viloyatining Achamayli qishlog'ida tug'ilgan. Mabtabni bitirgach texnikumda va shifoxonada hamshira lavozimida ish boshlagan oradan vaqt o'tgach oila qurgan. Oyijonimdan pazandachilikni, shirin so'z bo'lishni, oilaning past-u balandini va ro'zg'or qilishni opam bilan birgalikda o'rganib kelmoqdamiz. Oyijonim hozirda uy bekasi. Bizga to'g'ri tarbiya bergan oyijonimga rahmat aytaman.🫀"
+                bio: "Oyijonim Axmadxo'jayeva Muqaddasxon Yo'ldoshevna 1973-yil 26-iyul kuni Toshkent viloyatining Achamayli qishlog'ida tug'ilgan. Mabtabni bitirgach texnikumda va shifoxonada hamshira lavozimida ish boshlagan oradan vaqt o'tgach oila qurgan. Oyijonimdan pazandachilikni, shirin so'z bo'lishni, oilaning past-u balandini va ro'zg'or qilishni opam bilan birgalikda o'rganib kelmoqdamiz. Oyijonim hozirda uy bekasi. Bizga to'g'ri tarbiya bergan oyijonimga rahmat aytaman.🫀",
+                extra: [
+                    "rasim12.jpg",
+                    "rasim13.jpg",
+                    "rasim13.jpg"
+                ]
             },
             akam: {
                 name: "Xamzayev Javohir Saidxo'ja o'g'li",
                 image: "rasim22.jpg",
-                bio: "Akajonim Xamzayev Javohir Saidxo'ja o'g'li 1995-yil 2-avgust kuni Toshkent viloyatining Olmaliq shahrida tug'ilgan. Dastlab bog'chada keyin maktabda so'ng kolejda o'qib o'zi sevgan kasbni egalladi. Keyin oila quridi va hozirda 3 farzandning otasi. Kennoyim uy bekasi farzandlarining tarbiyasi bilan shug'ullanadi. Akam doim meni muammolarimni hal qilishga yordam beradi.🫀"
+                bio: "Akajonim Xamzayev Javohir Saidxo'ja o'g'li 1995-yil 2-avgust kuni Toshkent viloyatining Olmaliq shahrida tug'ilgan. Dastlab bog'chada keyin maktabda so'ng kolejda o'qib o'zi sevgan kasbni egalladi. Keyin oila quridi va hozirda 3 farzandning otasi. Kennoyim uy bekasi farzandlarining tarbiyasi bilan shug'ullanadi. Akam doim meni muammolarimni hal qilishga yordam beradi.🫀",
+                extra: [
+                    "rasim23.jpg",
+                    "rasim24.jpg",
+                    "rasim25.jpg"
+                ]
             },
             opam: {
                 name: "Xamzayeva Xusnoraxon Saidxo'ja qizi",
                 image: "rasim33.jpg",
-                bio: "Opajonim Xamzayeva Xusnoraxon Saidxo'ja qizi 1993-yil 23-sentabr kuni Toshkent viloyatining Olmaliq shahrida tug'ilgan. Dastlab bog'chada keyin maktabda so'ng kolejda yoshligidan bilimlarni egallab kelgan va ishga joylashgan. 21 yoshida oila qurgan hozirda bir og'il vaa bir qizning onasi. Pocham va opam farzandlariga to'g'ri tarbiya berib el-yurtga foydasi tegadigan qilib katta qilmoqda. O'z yo'lida opam ham doimo meni qo'llab quvvatlaydi.🫀"
+                bio: "Opajonim Xamzayeva Xusnoraxon Saidxo'ja qizi 1993-yil 23-sentabr kuni Toshkent viloyatining Olmaliq shahrida tug'ilgan. Dastlab bog'chada keyin maktabda so'ng kolejda yoshligidan bilimlarni egallab kelgan va ishga joylashgan. 21 yoshida oila qurgan hozirda bir og'il vaa bir qizning onasi. Pocham va opam farzandlariga to'g'ri tarbiya berib el-yurtga foydasi tegadigan qilib katta qilmoqda. O'z yo'lida opam ham doimo meni qo'llab quvvatlaydi.🫀",
+                extra: [
+                    "rasim34.jpg",
+                    "rasim35.jpg",
+                    "rasim36.jpg"
+                ]
             },
             men: {
                 name: "Xamzayeva Solihabonu Saidxo'ja qizi",
                 image: "rasim44.jpg",
-                bio: "Men Xamzayeva Solihabonu Saidxo'ja qizi 2007-yil 12-may kuni Toshkent viloyatining Olmaliq shahrida tug'ilganman. Uyda kichik farzandman ota onam meni 12 yil kutishgan. Bog'chaga bormaganman maktabda 11 yil o'qidim va o'qish davomida 3 yil ingliz tili o'rgandim hozirda Cefr B2 va IETS 7.5 sertifikatlarim bor. Undan tashqari oz muddat tarix , ona tili va matematika fanlarini o'rgandim. Oliy ta'limga o'qishga topshirdim davlat universitetlarining 2 tasiga grant asosida qabul qilindim ammo boshqa viloyat bo'lgani sabab  Ipak Yo'li Innovatsiyalar universitetini tanladim va hozirda shu yerda tahsil olayapman. Bu yerda ko'plab tadbirlarda faol qatnashib diplom va sertifikatlar bilaan taqdirlandim. Hozirda bilim olishdan to'htamagan holda koreys tili o'rganayapman undan tashqari haftada 2 kun o'quv markazda ishlayman. Ota onamning bergan tarbiyasi uchun va meni shu darajaga yetgazishda qilgan sarmoyasi va mehnati uchun ularga ko'p bora rahmat aytaman.🫀"
+                bio: "Men Xamzayeva Solihabonu Saidxo'ja qizi 2007-yil 12-may kuni Toshkent viloyatining Olmaliq shahrida tug'ilganman. Uyda kichik farzandman ota onam meni 12 yil kutishgan. Bog'chaga bormaganman maktabda 11 yil o'qidim va o'qish davomida 3 yil ingliz tili o'rgandim hozirda Cefr B2 va IETS 7.5 sertifikatlarim bor. Undan tashqari oz muddat tarix , ona tili va matematika fanlarini o'rgandim. Oliy ta'limga o'qishga topshirdim davlat universitetlarining 2 tasiga grant asosida qabul qilindim ammo boshqa viloyat bo'lgani sabab  Ipak Yo'li Innovatsiyalar universitetini tanladim va hozirda shu yerda tahsil olayapman. Bu yerda ko'plab tadbirlarda faol qatnashib diplom va sertifikatlar bilaan taqdirlandim. Hozirda bilim olishdan to'htamagan holda koreys tili o'rganayapman undan tashqari haftada 2 kun o'quv markazda ishlayman. Ota onamning bergan tarbiyasi uchun va meni shu darajaga yetgazishda qilgan sarmoyasi va mehnati uchun ularga ko'p bora rahmat aytaman.🫀",
+                extra: [
+                    "rasim45.jpg",
+                    "rasim46.jpg",
+                    "rasim47.jpg"
+                ]
             }
         };
 
@@ -415,42 +420,30 @@
             "rasim600.jpg"
         ];
 
-        // --- ASOSIY FUNKSIYALAR ---
-
         function startApp() {
-            // 1. Musiqani boshlash
             const bgMusic = document.getElementById('bgMusic');
-            bgMusic.volume = 0.5; // Ovoz balandligini pasaytirish (past ovoz)
-            bgMusic.play().catch(e => console.log("Brauzer avtomatik musiqani chekladi: ", e));
+            bgMusic.volume = 0.4;
+            bgMusic.play().catch(e => console.log("Audio Error"));
 
-            // 2. Intro ekranni yo'qotish
             const intro = document.getElementById('introScreen');
             intro.style.opacity = '0';
             setTimeout(() => {
-                intro.style.visibility = 'hidden';
-                intro.style.display = 'none'; // DOMdan olib tashlash
-                // 3. Menyuni ko'rsatish
+                intro.style.display = 'none';
                 document.getElementById('menuScreen').classList.add('active');
             }, 1000);
         }
 
         function goBackToMenu() {
-            // Barcha ekranlarni yopish
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            // Menyuni ochish
             document.getElementById('menuScreen').classList.add('active');
-            
-            // Dadamning animatsiyasini reset qilish
-            document.getElementById('dadExtraPhotos').classList.remove('visible');
+            document.getElementById('extraPhotosContainer').classList.remove('visible');
             window.removeEventListener('scroll', checkScroll);
         }
 
-        // SCROLL KUZATUVCHISI (Faqat Dadam uchun)
         function checkScroll() {
-            const extraPhotos = document.getElementById('dadExtraPhotos');
-            // Agar sahifa oxiriga yaqinlashsak
+            const container = document.getElementById('extraPhotosContainer');
             if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 150) {
-                extraPhotos.classList.add('visible');
+                container.classList.add('visible');
             }
         }
 
@@ -458,87 +451,60 @@
             const data = familyData[memberKey];
             if(!data) return;
 
-            // Menyuni yopish
             document.getElementById('menuScreen').classList.remove('active');
             
-            // Ma'lumotlarni to'ldirish
             document.getElementById('profileName').innerText = data.name;
-            
             const mainImg = document.getElementById('profileMainImg');
             mainImg.src = data.image;
-            // Asosiy rasmni bosganda kattalashadigan qilish
-            mainImg.onclick = function() { openImageModal(data.image); };
-            
+            mainImg.onclick = () => openImageModal(data.image);
             document.getElementById('profileBio').innerText = data.bio;
 
-            const extraPhotosContainer = document.getElementById('dadExtraPhotos');
-            const scrollHint = document.getElementById('scrollHint');
+            // Pastki rasmlarni dinamik to'ldirish
+            const container = document.getElementById('extraPhotosContainer');
+            container.innerHTML = ''; // Avvalgisini tozalash
+            
+            data.extra.forEach(src => {
+                const img = document.createElement('img');
+                img.src = src;
+                img.className = 'extra-photo';
+                img.onclick = () => openImageModal(src);
+                container.appendChild(img);
+            });
 
-            // Agar tanlangan kishi "dadam" bo'lsa
-            if (memberKey === 'dadam') {
-                extraPhotosContainer.style.display = 'flex';
-                extraPhotosContainer.classList.remove('visible'); // Boshida ko'rinmas
-                scrollHint.classList.remove('hidden'); // Surish belgisini ko'rsatish
-                
-                // Scroll hodisasini quloq solish
-                window.addEventListener('scroll', checkScroll);
-                // Sahifa tepasiga qaytarish
-                window.scrollTo(0, 0);
-            } else {
-                // Boshqalar uchun yashirish
-                extraPhotosContainer.style.display = 'none';
-                scrollHint.classList.add('hidden');
-                window.removeEventListener('scroll', checkScroll);
-                window.scrollTo(0, 0);
-            }
-
-            // Profil ekranni ochish
+            container.classList.remove('visible');
+            document.getElementById('scrollHint').classList.remove('hidden');
+            
+            window.addEventListener('scroll', checkScroll);
             document.getElementById('profileScreen').classList.add('active');
+            window.scrollTo(0, 0);
         }
 
         function openGallery() {
             document.getElementById('menuScreen').classList.remove('active');
-            const galleryGrid = document.getElementById('galleryGrid');
-            galleryGrid.innerHTML = ''; // Tozalash
-
-            // Galereya ekranni ochish
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = '';
             document.getElementById('galleryScreen').classList.add('active');
-            window.scrollTo(0, 0);
-
-            // Rasmlarni ketma-ket animatsiya bilan qo'shish
-            galleryImages.forEach((src, index) => {
+            
+            galleryImages.forEach((src, i) => {
                 setTimeout(() => {
                     const img = document.createElement('img');
                     img.src = src;
-                    img.className = 'gallery-item fallback-img';
-                    img.alt = 'Oilaviy Rasm ' + (index + 1);
-                    // Galereyadagi rasmlarni bosganda kattalashadigan qilish
+                    img.className = 'gallery-item';
                     img.onclick = () => openImageModal(src);
-                    galleryGrid.appendChild(img);
-                }, index * 200); // Har bir rasm 200ms farq bilan chiqadi
+                    grid.appendChild(img);
+                }, i * 150);
             });
         }
 
-        // --- RASMNI KATTALASHTIRISH FUNKSIYALARI ---
         function openImageModal(src) {
             const modal = document.getElementById('imageModal');
-            const modalImg = document.getElementById('modalImg');
-            modalImg.src = src;
+            document.getElementById('modalImg').src = src;
             modal.classList.add('active');
         }
 
-        function closeImageModal(event) {
-            // Agar foydalanuvchi aynan rasmning o'ziga bosa, yopilmasin
-            if (event && event.target.id === 'modalImg') {
-                return;
-            }
-            const modal = document.getElementById('imageModal');
-            modal.classList.remove('active');
-            
-            // Animatsiya tugagach rasmni tozalab turamiz
-            setTimeout(() => {
-                document.getElementById('modalImg').src = "";
-            }, 400);
+        function closeImageModal(e) {
+            if (e.target.id === 'modalImg') return;
+            document.getElementById('imageModal').classList.remove('active');
         }
     </script>
 </body>

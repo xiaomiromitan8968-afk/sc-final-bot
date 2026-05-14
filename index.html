@@ -3,235 +3,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS SYSTEM - SC_ MALIKOV</title>
+    <title>Mening Oilam - Raqamli Albom</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Orbitron:wght@400;700&display=swap');
+        
         body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #020202;
+            color: #ffffff;
             margin: 0;
-            background-color: #000;
-            color: #00e5ff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-            text-transform: uppercase;
+            overflow-x: hidden;
         }
 
-        /* HUD (Head-Up Display) qatlamlari */
-        #ui-overlay {
-            position: absolute;
+        /* 1-BO'LIM: ANIMATSION FONI */
+        .intro-container {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            pointer-events: none;
-            border: 2px solid rgba(0, 229, 255, 0.1);
-            box-sizing: border-box;
-            z-index: 10;
-        }
-
-        .header {
-            position: absolute;
-            top: 20px;
-            left: 30px;
-            letter-spacing: 3px;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 300;
-            text-shadow: 0 0 10px #00e5ff;
-        }
-
-        .brand {
-            color: #ff0055;
-            font-weight: bold;
-        }
-
-        .status-box {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            text-align: right;
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .scanner {
-            position: absolute;
-            top: 50%;
-            left: 30px;
-            transform: translateY(-50%);
-            font-size: 10px;
-            color: rgba(0, 229, 255, 0.5);
-        }
-
-        /* Ovoz to'lqini vizualizatsiyasi uchun joy */
-        #visualizer {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 50px;
+            height: 100vh;
+            background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite;
+            z-index: 100;
             display: flex;
+            justify-content: center;
             align-items: center;
-            justify-content: space-between;
+            transition: transform 1s cubic-bezier(0.77, 0, 0.175, 1);
         }
 
-        .bar {
-            width: 3px;
-            background: #00e5ff;
-            box-shadow: 0 0 5px #00e5ff;
-            transition: height 0.1s;
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .neon-btn {
+            font-family: 'Orbitron', sans-serif;
+            padding: 20px 50px;
+            font-size: 1.5rem;
+            background: transparent;
+            color: #00f2ff;
+            border: 3px solid #00f2ff;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 15px #00f2ff, inset 0 0 10px #00f2ff;
+            text-shadow: 0 0 5px #00f2ff;
+            transition: all 0.4s ease;
+            position: relative;
+            z-index: 101;
+        }
+
+        .neon-btn:hover {
+            background: #00f2ff;
+            color: #000;
+            box-shadow: 0 0 30px #00f2ff, 0 0 60px #00f2ff;
+        }
+
+        /* EKRANLAR */
+        .section {
+            display: none;
+            min-height: 100vh;
+            padding: 40px 20px;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* MENYU TUGMALARI */
+        .grid-menu {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .member-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .member-card:hover {
+            background: rgba(0, 242, 255, 0.1);
+            border-color: #00f2ff;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 242, 255, 0.2);
+        }
+
+        .family-card {
+            margin-top: 30px;
+            background: linear-gradient(90deg, #00f2ff1a, #7000ff1a);
+            border-color: #7000ff;
+            color: #7000ff;
+        }
+
+        .family-card:hover {
+            border-color: #00f2ff;
+            color: #00f2ff;
+        }
+
+        /* PROFIL */
+        .profile-header-img {
+            width: 100%;
+            max-width: 350px;
+            aspect-ratio: 9/16;
+            margin: 0 auto 30px;
+            border-radius: 25px;
+            object-fit: cover;
+            border: 2px solid #00f2ff;
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.3);
+        }
+
+        .cv-box {
+            max-width: 700px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 20px;
+            line-height: 1.8;
+            font-size: 1.1rem;
+            color: #ddd;
+            text-align: justify;
+        }
+
+        /* DADAM UCHUN MAXSUS RASMLAR */
+        .dad-extra-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 40px;
+            opacity: 0;
+            transform: translateY(100px);
+            transition: all 1s ease;
+        }
+
+        .dad-extra-grid.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .extra-img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        .back-nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 242, 255, 0.2);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        /* OILAVIY GALEREYA */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .gallery-photo {
+            width: 100%;
+            border-radius: 15px;
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
     </style>
 </head>
 <body>
 
-    <div id="ui-overlay">
-        <div class="header">
-            <h1>JARVIS <span class="brand">SC_ MALIKOV</span></h1>
-            <div id="date-time">SYSTEM ONLINE...</div>
-        </div>
+    <!-- MUSIQA -->
+    <audio id="appMusic" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2021/11/25/audio_91b32e01d9.mp3?filename=soft-piano-background-8040.mp3" type="audio/mpeg">
+    </audio>
 
-        <div class="scanner">
-            CORE_TEMP: 42°C<br>
-            NEURAL_LINK: STABLE<br>
-            XAUUSD_ANALYSIS: WAITING...<br>
-            SMC_ZONE: MITIGATED
-        </div>
-
-        <div class="status-box">
-            PROTOCOL: PARADOX JARVIS ZERO<br>
-            LOCATION: TASHKENT, UZ<br>
-            ENCRYPTION: AES-256
-        </div>
-
-        <div id="visualizer">
-            </div>
+    <!-- INTRO EKRAN -->
+    <div id="intro" class="intro-container">
+        <button class="neon-btn" onclick="enterApp()">Menga Oilam</button>
     </div>
 
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    <!-- ASOSIY MENYU -->
+    <div id="menu-screen" class="section">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">
+                OILAM
+            </h1>
+        </div>
+        <div class="grid-menu">
+            <div class="member-card" onclick="showProfile('dadam')">Dadam</div>
+            <div class="member-card" onclick="showProfile('oyim')">Oyim</div>
+            <div class="member-card" onclick="showProfile('akam')">Akam</div>
+            <div class="member-card" onclick="showProfile('opam')">Opam</div>
+            <div class="member-card" onclick="showProfile('men')">Men</div>
+            
+            <div class="member-card family-card" onclick="showGallery()">Mening Oilam</div>
+        </div>
+    </div>
+
+    <!-- PROFIL EKRANI -->
+    <div id="profile-screen" class="section">
+        <div class="back-nav" onclick="goBack()"><i class="fa-solid fa-arrow-left text-cyan-400"></i></div>
+        
+        <div id="profile-content" class="text-center">
+            <h2 id="p-title" class="text-3xl font-bold mb-6 text-cyan-400">Ism</h2>
+            
+            <!-- Siz yuborgan rasm dadam uchun asosiy rasm bo'ladi -->
+            <img id="p-img" src="" class="profile-header-img" alt="Asosiy rasm">
+            
+            <div id="p-cv" class="cv-box mb-10">
+                Tarjimai hol...
+            </div>
+
+            <!-- Dadam uchun maxsus 3 ta rasm -->
+            <div id="dad-extras" class="dad-extra-grid px-4">
+                <img src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=300" class="extra-img" alt="Dad 2">
+                <img src="https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=300" class="extra-img" alt="Dad 3">
+                <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300" class="extra-img" alt="Dad 4">
+            </div>
+            
+            <div id="scroll-prompt" class="mt-10 mb-20 text-cyan-500/50 animate-bounce hidden">
+                <i class="fa-solid fa-angles-down"></i><br>
+                <small>Pastga suring</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- GALEREYA EKRANI -->
+    <div id="gallery-screen" class="section">
+        <div class="back-nav" onclick="goBack()"><i class="fa-solid fa-arrow-left text-purple-400"></i></div>
+        <h2 class="text-3xl text-center font-bold text-purple-400 mb-8">Oilaviy Rasmlar</h2>
+        <div class="gallery-grid" id="gallery-items">
+            <!-- Rasmlar JS orqali qo'shiladi -->
+        </div>
+    </div>
+
+    <script>
+        const dadImage = "https://lh3.googleusercontent.com/d/1000010474.png"; // Yuborgan rasm manzili
+
+        const familyInfo = {
+            dadam: {
+                name: "Axmadxo'jayev Saidxo'ja",
+                img: "rasim1.jpg", // Foydalanuvchi yuborgan rasm
+                cv: "Bizning oilamiz boshi bu dadajonim. Dadajonim Axmadxo'jayev Saidxo'ja Xamzayevich 1971-yil 28-yanvar kuni Toshkent viloyatining Said qishlog'ida tug'ilgan. Maktabni bitirgach texnikumda o'gan va 2 yil harbiy hizmatni õtab kelgan keyin ishga joylashgach oyijonimga uylangan🥰 hozirda baxtlimiz. Dadajonimdan mehnatkashlikni, ochiqqo'llikni, yordam kerak bo'lgan insonlarga yordam berishlikni va eng asosiysi halollikni o'rganganmiz. Shuni aytib o'tishim joiz deb o'yladim dadajonim 2025-yil may oyida qilgan mehnatlari va fidoiyliklari uchun Shuhrat medali bilan omma oldida taqdirlangan va shu yoshigacha ko'lab gazeta va jurnallarda rasmlari chop etilgan. Bizga tõg'ri yo'l ko'rsatgan dadajonimga rahmat aytaman.🫀",
+                extra: true
+            },
+            oyim: {
+                name: "Mehribon Oyijonim",
+                img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500",
+                cv: "Oilamizning farishtasi, bizning baxtimiz manbai. Har doim bizni qo'llab-quvvatlaydigan, mehri daryo inson. Oyijonimning pishirgan shirin taomlari va shirin so'zlari uydagi baraka ramzidir.",
+                extra: false
+            },
+            akam: {
+                name: "Akajonim",
+                img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500",
+                cv: "Mening eng yaqin do'stim va akam. U kishidan har doim sabr va matonatni o'rganaman. Kelajakda katta marralarni ko'zlagan shijoatli inson.",
+                extra: false
+            },
+            opam: {
+                name: "Opajonim",
+                img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500",
+                cv: "Mening sirdoshim va maslahatgo'yim. Uning nozik didi va dunyoqarashi bizni doim hayratda qoldiradi.",
+                extra: false
+            },
+            men: {
+                name: "Men",
+                img: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=500",
+                cv: "Shu ajoyib va baxtli oilaning bir a'zosi. Ushbu raqamli albomni dadajonim va butun oilamiz uchun mehr bilan tayyorladim.",
+                extra: false
+            }
+        };
+
+        const galleryPics = [
+            "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400",
+            "https://images.unsplash.com/photo-1581952971540-84c483a9ce42?w=400",
+            "https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?w=400",
+            "https://images.unsplash.com/photo-1511270339303-3bb5bb3b9ca9?w=400"
+        ];
+
+        function enterApp() {
+            // Musiqa boshlanadi
+            const music = document.getElementById('appMusic');
+            music.volume = 0.4;
+            music.play().catch(e => console.log("Musiqa uchun ruxsat kerak"));
+
+            // Animatsiya bilan o'tish
+            const intro = document.getElementById('intro');
+            intro.style.transform = "translateY(-100%)";
+            setTimeout(() => {
+                document.getElementById('menu-screen').classList.add('active');
+            }, 600);
+        }
+
+        function showProfile(key) {
+            const data = familyInfo[key];
+            const profile = document.getElementById('profile-screen');
+            const menu = document.getElementById('menu-screen');
+            
+            document.getElementById('p-title').innerText = data.name;
+            document.getElementById('p-img').src = data.img;
+            document.getElementById('p-cv').innerText = data.cv;
+
+            // Dadadami?
+            const extras = document.getElementById('dad-extras');
+            const scrollHint = document.getElementById('scroll-prompt');
+            
+            if(data.extra) {
+                extras.style.display = "grid";
+                extras.classList.remove('visible');
+                scrollHint.classList.remove('hidden');
+                window.addEventListener('scroll', handleDadScroll);
+            } else {
+                extras.style.display = "none";
+                scrollHint.classList.add('hidden');
+                window.removeEventListener('scroll', handleDadScroll);
+            }
+
+            menu.classList.remove('active');
+            profile.classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function handleDadScroll() {
+            const extras = document.getElementById('dad-extras');
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+                extras.classList.add('visible');
             }
         }
-    </script>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-
-        // 1. SAHNA SOZLAMALARI
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        document.body.appendChild(renderer.domElement);
-
-        // 2. NEON GLOW (BLOOM) EFFEKTI
-        const renderScene = new RenderPass(scene, camera);
-        const bloomPass = new UnrealBloomPass(
-            new THREE.Vector2(window.innerWidth, window.innerHeight),
-            1.5, // Bloom kuchi
-            0.4, // Radius
-            0.85 // Threshold
-        );
-        
-        const composer = new EffectComposer(renderer);
-        composer.addPass(renderScene);
-        composer.addPass(bloomPass);
-
-        // 3. JARVIS HALQALARI (GEOMETRIYA)
-        const ringGroup = new THREE.Group();
-        scene.add(ringGroup);
-
-        const createRing = (radius, tube, color, rotationSpeed) => {
-            const geometry = new THREE.TorusGeometry(radius, tube, 16, 100);
-            const material = new THREE.MeshBasicMaterial({ 
-                color: color, 
-                wireframe: true,
-                transparent: true,
-                opacity: 0.6
-            });
-            const ring = new THREE.Mesh(geometry, material);
-            ring.userData = { speed: rotationSpeed };
-            return ring;
-        };
-
-        // Turli xil halqalar qo'shish
-        const ring1 = createRing(8, 0.02, 0x00e5ff, 0.01);
-        const ring2 = createRing(10, 0.05, 0x0088ff, -0.005);
-        const ring3 = createRing(12, 0.01, 0xff0055, 0.02);
-        
-        ring2.rotation.x = Math.PI / 2;
-        ring3.rotation.y = Math.PI / 4;
-
-        ringGroup.add(ring1, ring2, ring3);
-
-        // Markaziy gologramma nuqtasi
-        const coreGeo = new THREE.IcosahedronGeometry(1, 1);
-        const coreMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, wireframe: true });
-        const core = new THREE.Mesh(coreGeo, coreMat);
-        scene.add(core);
-
-        camera.position.z = 25;
-
-        // 4. DINAMIK INTERFEYS ELEMENTLARI
-        const visualizer = document.getElementById('visualizer');
-        for (let i = 0; i < 20; i++) {
-            const bar = document.createElement('div');
-            bar.className = 'bar';
-            bar.style.height = '10px';
-            visualizer.appendChild(bar);
-        }
-
-        const updateVisualizer = () => {
-            const bars = document.querySelectorAll('.bar');
-            bars.forEach(bar => {
-                const height = Math.random() * 40 + 5;
-                bar.style.height = `${height}px`;
-            });
-        };
-
-        // 5. ANIMATSIYA TSIKLI
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Halqalarni aylantirish
-            ring1.rotation.z += ring1.userData.speed;
-            ring2.rotation.x += ring2.userData.speed;
-            ring3.rotation.y += ring3.userData.speed;
+        function showGallery() {
+            const menu = document.getElementById('menu-screen');
+            const gallery = document.getElementById('gallery-screen');
+            const grid = document.getElementById('gallery-items');
             
-            core.rotation.y += 0.02;
+            grid.innerHTML = '';
+            menu.classList.remove('active');
+            gallery.classList.add('active');
+            window.scrollTo(0,0);
 
-            // Vizualizatorni yangilash
-            if (Math.random() > 0.8) updateVisualizer();
-
-            // Oddiy renderer o'rniga composer ishlatiladi (Bloom uchun)
-            composer.render();
+            galleryPics.forEach((url, i) => {
+                setTimeout(() => {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.className = 'gallery-photo';
+                    img.style.animationDelay = `${i * 0.2}s`;
+                    grid.appendChild(img);
+                }, 100);
+            });
         }
 
-        // Oynani o'zgartirganda moslashish
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            composer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        animate();
-
-        // Vaqtni yangilab turish
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('date-time').innerText = now.toLocaleString();
-        }, 1000);
-
+        function goBack() {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('menu-screen').classList.add('active');
+            window.removeEventListener('scroll', handleDadScroll);
+        }
     </script>
 </body>
 </html>

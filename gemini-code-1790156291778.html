@@ -1,0 +1,2756 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>MY VOCABULARY AI</title>
+<meta name="description" content="Your notebook. Your words. Your vocabulary.">
+
+<!-- ============================================================
+     EXTERNAL LIBRARIES (CDN)
+     - jsPDF: browserning o'zida PDF yaratish uchun
+     - AutoTable plugin: jsPDF uchun chiroyli jadval chizish uchun
+     ============================================================ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" onerror="window.__PDF_LIB_FAILED = true;"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" onerror="window.__PDF_AUTOTABLE_FAILED = true;"></script>
+
+<!-- Google Fonts: serif display (Fraunces) + grotesk body (Inter) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg: #F6F2E9;
+  --bg-elevated: #FCFAF4;
+  --surface: #FFFFFF;
+  --ink: #1B1B18;
+  --ink-soft: #4A473E;
+  --ink-faint: #8C876F;
+  --line: #DED6C1;
+  --line-strong: #C9BE9E;
+  --accent: #9C6B1F;
+  --accent-strong: #7A5216;
+  --accent-wash: #F1E4C7;
+  --danger: #A33B2E;
+  --danger-wash: #F6E3DE;
+  --success: #3E6B4C;
+  --success-wash: #E4EEE6;
+  --shadow-color: 27 27 24;
+
+  --font-display: 'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 18px;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"]{
+  --bg: #0E0D0B;
+  --bg-elevated: #16140F;
+  --surface: #1C1A15;
+  --ink: #F3EFE3;
+  --ink-soft: #C9C3AE;
+  --ink-faint: #837D68;
+  --line: #322E24;
+  --line-strong: #423C2C;
+  --accent: #E0B24A;
+  --accent-strong: #F2C766;
+  --accent-wash: #2C2410;
+  --danger: #E27A68;
+  --danger-wash: #2E1712;
+  --success: #7FB893;
+  --success-wash: #142A1B;
+  --shadow-color: 0 0 0;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg: #0E0D0B;
+    --bg-elevated: #16140F;
+    --surface: #1C1A15;
+    --ink: #F3EFE3;
+    --ink-soft: #C9C3AE;
+    --ink-faint: #837D68;
+    --line: #322E24;
+    --line-strong: #423C2C;
+    --accent: #E0B24A;
+    --accent-strong: #F2C766;
+    --accent-wash: #2C2410;
+    --danger: #E27A68;
+    --danger-wash: #2E1712;
+    --success: #7FB893;
+    --success-wash: #142A1B;
+    --shadow-color: 0 0 0;
+    color-scheme: dark;
+  }
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+
+html{
+  scroll-padding-top: var(--safe-top);
+  -webkit-text-size-adjust: 100%;
+}
+
+html, body{
+  height: 100%;
+}
+
+body{
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+img{ max-width: 100%; display: block; }
+
+button{ font-family: inherit; }
+
+::selection{ background: var(--accent-wash); color: var(--ink); }
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible{
+  outline: 2.5px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================== LAYOUT SHELL ============================== */
+
+.app-shell{
+  max-width: 720px;
+  margin: 0 auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.app-header{
+  position: sticky;
+  top: var(--safe-top);
+  z-index: 30;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brand-mark{
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+}
+
+.brand-mark .glyph{
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.brand-mark .word{
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.header-actions{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-btn{
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  font-size: 17px;
+}
+.icon-btn:hover{ border-color: var(--line-strong); color: var(--ink); }
+.icon-btn:active{ transform: scale(0.94); }
+
+.app-main{
+  flex: 1;
+  padding: 20px 20px 100px;
+}
+
+.screen{ display: none; }
+.screen.is-active{ display: block; animation: screen-in 0.28s ease; }
+
+@keyframes screen-in{
+  from{ opacity: 0; transform: translateY(6px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+
+/* ============================== BOTTOM NAV ============================== */
+
+.bottom-nav{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  padding-bottom: var(--safe-bottom);
+  background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--line);
+}
+
+.bottom-nav-inner{
+  max-width: 720px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 6px 10px;
+}
+
+.nav-btn{
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px 6px;
+  cursor: pointer;
+  color: var(--ink-faint);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease;
+}
+.nav-btn .nav-icon{ font-size: 19px; line-height: 1; }
+.nav-btn.is-active{ color: var(--accent); }
+.nav-btn:hover{ color: var(--ink); }
+.nav-btn.is-active:hover{ color: var(--accent); }
+
+/* ============================== TYPOGRAPHY ============================== */
+
+.hero-title{
+  font-family: var(--font-display);
+  font-size: clamp(30px, 8vw, 38px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.08;
+  margin: 4px 0 8px;
+}
+
+.hero-tagline{
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15.5px;
+  color: var(--ink-soft);
+  margin: 0 0 28px;
+  max-width: 46ch;
+}
+
+.section-title{
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  letter-spacing: -0.005em;
+}
+
+.section-sub{
+  font-size: 13.5px;
+  color: var(--ink-faint);
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+/* ============================== MODE CARDS (home) ============================== */
+
+.mode-grid{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 30px;
+}
+
+.mode-card{
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px 18px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.18s ease, transform 0.14s ease, box-shadow 0.18s ease;
+}
+
+.mode-card::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent-wash), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.mode-card:hover{
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -14px rgba(var(--shadow-color) / 0.35);
+}
+.mode-card:hover::before{ opacity: 1; }
+.mode-card:active{ transform: translateY(0); }
+
+.mode-card-icon{
+  flex: none;
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-md);
+  background: var(--accent-wash);
+  color: var(--accent-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.mode-card-body{ position: relative; z-index: 1; flex: 1; min-width: 0; }
+
+.mode-card-title{
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17.5px;
+  margin: 0 0 3px;
+}
+
+.mode-card-desc{
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.mode-card-arrow{
+  flex: none;
+  color: var(--ink-faint);
+  font-size: 18px;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.18s ease, color 0.18s ease;
+}
+.mode-card:hover .mode-card-arrow{ transform: translateX(3px); color: var(--accent); }
+
+/* ============================== HISTORY (home) ============================== */
+
+.history-block{ margin-top: 6px; }
+
+.history-list{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-item{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.history-item:hover{ border-color: var(--line-strong); }
+
+.history-item-icon{
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--accent-wash);
+  color: var(--accent-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.history-item-text{ flex: 1; min-width: 0; }
+.history-item-title{
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.history-item-meta{
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 1px;
+}
+
+.history-item-delete{
+  flex: none;
+  background: none;
+  border: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.history-item-delete:hover{ color: var(--danger); background: var(--danger-wash); }
+
+.empty-hint{
+  font-size: 13px;
+  color: var(--ink-faint);
+  padding: 18px 4px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-md);
+}
+
+/* ============================== BUTTONS ============================== */
+
+.btn{
+  --_h: 48px;
+  height: var(--_h);
+  padding: 0 22px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+.btn:active{ transform: scale(0.98); }
+.btn:disabled{ opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-primary{
+  background: var(--accent);
+  color: #FFFBEF;
+  box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--accent) 65%, transparent);
+}
+.btn-primary:hover:not(:disabled){ background: var(--accent-strong); }
+
+.btn-secondary{
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.btn-secondary:hover:not(:disabled){ border-color: var(--accent); color: var(--accent-strong); }
+
+.btn-ghost{
+  background: none;
+  color: var(--ink-soft);
+  border-color: var(--line);
+}
+.btn-ghost:hover:not(:disabled){ border-color: var(--line-strong); color: var(--ink); }
+
+.btn-danger-ghost{
+  background: none;
+  color: var(--danger);
+  border-color: var(--danger);
+  opacity: 0.85;
+}
+.btn-danger-ghost:hover:not(:disabled){ opacity: 1; background: var(--danger-wash); }
+
+.btn-block{ width: 100%; }
+.btn-sm{ --_h: 38px; padding: 0 16px; font-size: 13px; }
+
+.btn-row{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.btn-row > .btn{ flex: 1; min-width: 140px; }
+
+/* ============================== BACK / TOP BAR ============================== */
+
+.subscreen-top{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.back-btn{
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: border-color 0.15s ease;
+}
+.back-btn:hover{ border-color: var(--accent); color: var(--accent-strong); }
+
+/* ============================== CARDS / PANELS ============================== */
+
+.panel{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.panel-title{
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  margin: 0 0 10px;
+}
+
+/* ============================== UPLOAD ZONE ============================== */
+
+.upload-zone{
+  border: 1.5px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  padding: 36px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.upload-zone:hover, .upload-zone.is-dragover{
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+.upload-zone.is-dragover{ border-style: solid; }
+
+.upload-zone-icon{
+  font-size: 34px;
+  margin-bottom: 10px;
+  color: var(--accent);
+}
+.upload-zone-title{
+  font-weight: 600;
+  font-size: 14.5px;
+  margin-bottom: 4px;
+}
+.upload-zone-sub{
+  font-size: 12.5px;
+  color: var(--ink-faint);
+}
+
+.preview-wrap{
+  margin-top: 16px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  position: relative;
+}
+.preview-wrap img{
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  background:
+    linear-gradient(45deg, color-mix(in srgb, var(--line) 40%, transparent) 25%, transparent 25%) -8px 0/16px 16px,
+    linear-gradient(-45deg, color-mix(in srgb, var(--line) 40%, transparent) 25%, transparent 25%) -8px 0/16px 16px,
+    var(--bg-elevated);
+}
+
+.preview-remove{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: none;
+  background: color-mix(in srgb, var(--ink) 78%, transparent);
+  color: var(--bg);
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-meta{
+  padding: 9px 12px;
+  font-size: 12px;
+  color: var(--ink-faint);
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+input[type="file"]{ display: none; }
+
+/* ============================== TEXTAREA ============================== */
+
+.field-label{
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 7px;
+  display: block;
+  letter-spacing: 0.005em;
+}
+
+textarea.words-input{
+  width: 100%;
+  min-height: 160px;
+  resize: vertical;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--bg-elevated);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+textarea.words-input:focus{
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-wash);
+}
+textarea.words-input::placeholder{ color: var(--ink-faint); }
+
+.words-count-hint{
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 7px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ============================== LOADING STATE ============================== */
+
+.loading-block{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 46px 20px;
+  gap: 16px;
+}
+
+.loading-spark{
+  font-size: 30px;
+  animation: spark-pulse 1.6s ease-in-out infinite;
+}
+@keyframes spark-pulse{
+  0%, 100%{ transform: scale(1) rotate(0deg); opacity: 0.85; }
+  50%{ transform: scale(1.12) rotate(8deg); opacity: 1; }
+}
+
+.loading-text{
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15.5px;
+  color: var(--ink-soft);
+  min-height: 22px;
+}
+
+.loading-bar{
+  width: 100%;
+  max-width: 220px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+  position: relative;
+}
+.loading-bar::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: var(--accent);
+  border-radius: 999px;
+  animation: bar-slide 1.3s ease-in-out infinite;
+}
+@keyframes bar-slide{
+  0%{ transform: translateX(-100%); }
+  100%{ transform: translateX(350%); }
+}
+
+/* ============================== ERROR / EMPTY STATE ============================== */
+
+.state-banner{
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--danger);
+  background: var(--danger-wash);
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+.state-banner.is-warn{
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+.state-banner-icon{ flex: none; font-size: 18px; line-height: 1.3; }
+.state-banner-title{ font-weight: 700; font-size: 13.5px; margin-bottom: 2px; }
+.state-banner-text{ font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+.state-banner-close{
+  flex: none;
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-faint);
+  font-size: 14px;
+  padding: 2px;
+}
+
+/* ============================== EDITOR TABLE ============================== */
+
+.editor-toolbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.editor-count{
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+.editor-count strong{ color: var(--ink); font-weight: 700; }
+
+.vocab-table{
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.vocab-row{
+  display: grid;
+  grid-template-columns: 30px 1fr 1fr 30px;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  transition: background 0.15s ease;
+}
+.vocab-row.has-confidence{
+  grid-template-columns: 26px 1fr 1fr 46px 30px;
+}
+.vocab-row:last-child{ border-bottom: none; }
+.vocab-row:hover{ background: var(--bg-elevated); }
+.vocab-row.is-low-confidence{ background: var(--danger-wash); }
+
+.vocab-row-head{
+  background: var(--bg-elevated);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  padding: 8px 10px;
+}
+.vocab-row-head:hover{ background: var(--bg-elevated); }
+
+.vocab-idx{
+  font-size: 12px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.vocab-cell-input{
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  padding: 7px 8px;
+  font-size: 14px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  min-width: 0;
+}
+.vocab-cell-input:focus{
+  outline: none;
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+.vocab-cell-input.cell-english{ font-weight: 600; }
+
+.vocab-confidence{
+  font-size: 10.5px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+  padding: 2px 4px;
+  border-radius: 999px;
+}
+.vocab-confidence.conf-high{ color: var(--success); }
+.vocab-confidence.conf-mid{ color: var(--accent-strong); }
+.vocab-confidence.conf-low{ color: var(--danger); font-weight: 700; }
+
+.row-delete{
+  background: none;
+  border: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: color 0.15s ease, background 0.15s ease;
+  margin: 0 auto;
+}
+.row-delete:hover{ color: var(--danger); background: var(--danger-wash); }
+
+.low-confidence-note{
+  font-size: 11.5px;
+  color: var(--danger);
+  padding: 0 10px 10px;
+  margin-top: -6px;
+  background: var(--danger-wash);
+}
+
+/* ============================== STUDY MODE ============================== */
+
+.study-card{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 44px 24px;
+  text-align: center;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.study-progress{
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--line);
+}
+.study-progress-fill{
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.25s ease;
+}
+
+.study-label{
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.study-word{
+  font-family: var(--font-display);
+  font-size: clamp(26px, 8vw, 34px);
+  font-weight: 600;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.study-answer{
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 22px;
+  color: var(--accent-strong);
+  min-height: 30px;
+}
+
+.study-nav-row{
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.study-empty{
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink-faint);
+}
+.study-empty .glyph{ font-size: 32px; display: block; margin-bottom: 12px; }
+
+/* ============================== SETTINGS / API KEY MODAL ============================== */
+
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--ink) 45%, transparent);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+.modal-overlay.is-open{ display: flex; animation: overlay-in 0.2s ease; }
+
+@keyframes overlay-in{ from{ opacity: 0; } to{ opacity: 1; } }
+
+.modal-sheet{
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg-elevated);
+  border-radius: 22px 22px 0 0;
+  padding: 22px 22px calc(26px + var(--safe-bottom));
+  max-height: 86vh;
+  overflow-y: auto;
+  animation: sheet-in 0.28s cubic-bezier(.2,.9,.25,1);
+  border: 1px solid var(--line);
+  border-bottom: none;
+}
+
+@media (min-width: 560px){
+  .modal-overlay{ align-items: center; padding: 20px; }
+  .modal-sheet{ border-radius: 20px; border-bottom: 1px solid var(--line); max-height: 90vh; }
+}
+
+@keyframes sheet-in{
+  from{ transform: translateY(28px); opacity: 0; }
+  to{ transform: translateY(0); opacity: 1; }
+}
+
+.modal-handle{
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  margin: 0 auto 16px;
+}
+@media (min-width: 560px){ .modal-handle{ display: none; } }
+
+.modal-title{
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+.modal-sub{
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.field-group{ margin-bottom: 16px; }
+
+input.text-field, select.text-field{
+  width: 100%;
+  height: 46px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 0 14px;
+  font-size: 14.5px;
+  color: var(--ink);
+  background: var(--surface);
+  font-family: var(--font-body);
+}
+input.text-field:focus, select.text-field:focus{
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-wash);
+}
+
+.field-hint{
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.field-hint a{ color: var(--accent-strong); }
+
+.key-input-row{
+  position: relative;
+}
+.key-input-row input{ padding-right: 44px; }
+.key-toggle-visibility{
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  bottom: 4px;
+  width: 38px;
+  border: none;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modal-actions{
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.theme-toggle-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 18px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+.theme-toggle-label{ font-size: 14px; font-weight: 600; }
+.theme-toggle-sub{ font-size: 12px; color: var(--ink-faint); margin-top: 1px; }
+
+.segmented{
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+  background: var(--surface);
+}
+.segmented button{
+  border: none;
+  background: none;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.segmented button.is-active{
+  background: var(--accent);
+  color: #FFFBEF;
+}
+
+/* ============================== TOAST ============================== */
+
+.toast-host{
+  position: fixed;
+  bottom: calc(84px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  width: calc(100% - 32px);
+  max-width: 460px;
+  pointer-events: none;
+}
+
+.toast{
+  background: color-mix(in srgb, var(--ink) 92%, transparent);
+  color: var(--bg);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 11px 18px;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px -8px rgba(0,0,0,0.4);
+  animation: toast-in 0.22s ease;
+  max-width: 100%;
+  text-align: center;
+}
+@keyframes toast-in{
+  from{ opacity: 0; transform: translateY(10px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+.toast.is-leaving{ animation: toast-out 0.18s ease forwards; }
+@keyframes toast-out{ to{ opacity: 0; transform: translateY(6px); } }
+
+/* ============================== UTILITIES ============================== */
+
+.sr-only{
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.mt-0{ margin-top: 0 !important; }
+.mb-0{ margin-bottom: 0 !important; }
+
+@media (min-width: 640px){
+  .app-header{ padding: 16px 28px; }
+  .app-main{ padding: 26px 28px 110px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ============================== HEADER ============================== -->
+  <header class="app-header">
+    <button class="brand-mark" id="brandHomeBtn" type="button" aria-label="Bosh sahifa">
+      <span class="glyph">V</span>
+      <span class="word">MY VOCABULARY AI</span>
+    </button>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggleBtn" type="button" title="Mavzuni almashtirish" aria-label="Mavzuni almashtirish">🌓</button>
+      <button class="icon-btn" id="settingsBtn" type="button" title="Sozlamalar / API key" aria-label="Sozlamalar">⚙️</button>
+    </div>
+  </header>
+
+  <!-- ============================== MAIN ============================== -->
+  <main class="app-main">
+
+    <!-- ======================= SCREEN: HOME ======================= -->
+    <section class="screen is-active" id="screen-home" aria-labelledby="homeHeading">
+      <h1 class="hero-title" id="homeHeading">MY VOCABULARY AI</h1>
+      <p class="hero-tagline">"Your notebook. Your words. Your vocabulary."</p>
+
+      <div class="mode-grid">
+        <button class="mode-card" type="button" data-nav="notebook">
+          <span class="mode-card-icon">📷</span>
+          <span class="mode-card-body">
+            <span class="mode-card-title">Notebook → PDF</span>
+            <span class="mode-card-desc">Daftar rasmini yuklang. AI o'qiydi va chiroyli PDF yaratadi.</span>
+          </span>
+          <span class="mode-card-arrow">→</span>
+        </button>
+
+        <button class="mode-card" type="button" data-nav="words">
+          <span class="mode-card-icon">✍️</span>
+          <span class="mode-card-body">
+            <span class="mode-card-title">Words → PDF</span>
+            <span class="mode-card-desc">Inglizcha so'zlarni kiriting. AI tarjima qiladi va PDF tayyorlaydi.</span>
+          </span>
+          <span class="mode-card-arrow">→</span>
+        </button>
+      </div>
+
+      <div class="history-block">
+        <h2 class="section-title">So'nggi lug'atlar</h2>
+        <p class="section-sub">Oldingi natijalaringizni qayta oching yoki davom ettiring.</p>
+        <div class="history-list" id="historyList">
+          <!-- JS orqali to'ldiriladi -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= SCREEN: NOTEBOOK ======================= -->
+    <section class="screen" id="screen-notebook" aria-labelledby="notebookHeading">
+      <div class="subscreen-top">
+        <button class="back-btn" type="button" data-nav="home" aria-label="Orqaga">←</button>
+        <div>
+          <h2 class="section-title mb-0" id="notebookHeading">📷 Notebook → PDF</h2>
+        </div>
+      </div>
+      <p class="section-sub">Daftar sahifangizning rasmini yuklang. Groq AI qo'lyozmani o'qib, so'z va tarjimalarni ajratib beradi.</p>
+
+      <div id="notebookBanners"></div>
+
+      <!-- Upload step -->
+      <div id="notebookUploadStep">
+        <div class="upload-zone" id="uploadZone" tabindex="0" role="button" aria-label="Rasm yuklash zonasi">
+          <div class="upload-zone-icon">📷</div>
+          <div class="upload-zone-title">Rasm yuklash</div>
+          <div class="upload-zone-sub">Bosing yoki rasmni shu yerga tashlang (JPEG, PNG, WebP)</div>
+        </div>
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/jpg">
+
+        <div id="previewWrap" style="display:none;" class="preview-wrap">
+          <button class="preview-remove" id="previewRemoveBtn" type="button" aria-label="Rasmni olib tashlash">✕</button>
+          <img id="previewImg" alt="Yuklangan daftar rasmi ko'rinishi">
+          <div class="preview-meta">
+            <span id="previewFileName">—</span>
+            <span id="previewFileSize">—</span>
+          </div>
+        </div>
+
+        <div style="margin-top:18px;">
+          <button class="btn btn-primary btn-block" id="ocrRunBtn" type="button" disabled>
+            <span>✨</span><span>GROQ BILAN O'QISH</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading step -->
+      <div id="notebookLoadingStep" style="display:none;">
+        <div class="loading-block">
+          <div class="loading-spark">✨</div>
+          <div class="loading-text" id="notebookLoadingText">AI is reading your vocabulary...</div>
+          <div class="loading-bar"></div>
+        </div>
+      </div>
+
+      <!-- Editor step -->
+      <div id="notebookEditorStep" style="display:none;">
+        <div class="editor-toolbar">
+          <span class="editor-count">Jami: <strong id="notebookEditorCount">0</strong> ta so'z</span>
+        </div>
+        <div class="vocab-table" id="notebookVocabTable">
+          <!-- JS orqali to'ldiriladi -->
+        </div>
+        <div class="btn-row" style="margin-bottom:10px;">
+          <button class="btn btn-secondary" id="notebookAddWordBtn" type="button">+ SO'Z QO'SHISH</button>
+          <button class="btn btn-danger-ghost" id="notebookClearAllBtn" type="button">🗑 HAMMASINI TOZALASH</button>
+        </div>
+        <button class="btn btn-primary btn-block" id="notebookGeneratePdfBtn" type="button">
+          <span>📄</span><span>PDF YARATISH</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================= SCREEN: WORDS ======================= -->
+    <section class="screen" id="screen-words" aria-labelledby="wordsHeading">
+      <div class="subscreen-top">
+        <button class="back-btn" type="button" data-nav="home" aria-label="Orqaga">←</button>
+        <div>
+          <h2 class="section-title mb-0" id="wordsHeading">✍️ Words → PDF</h2>
+        </div>
+      </div>
+      <p class="section-sub">Inglizcha so'z yoki iboralarni kiriting — vergul bilan yoki har birini yangi qatorda. Groq AI o'zbekchaga tarjima qiladi.</p>
+
+      <div id="wordsBanners"></div>
+
+      <!-- Input step -->
+      <div id="wordsInputStep">
+        <label class="field-label" for="wordsTextarea">Inglizcha so'zlar / iboralar</label>
+        <textarea class="words-input" id="wordsTextarea" placeholder="nearly, the same, look for, search for, kill, die"></textarea>
+        <div class="words-count-hint">
+          <span id="wordsDetectedCount">0 ta so'z aniqlandi</span>
+          <span>Vergul yoki yangi qator bilan ajrating</span>
+        </div>
+
+        <div style="margin-top:18px;">
+          <button class="btn btn-primary btn-block" id="translateRunBtn" type="button" disabled>
+            <span>✨</span><span>AI TARJIMA QILISH</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading step -->
+      <div id="wordsLoadingStep" style="display:none;">
+        <div class="loading-block">
+          <div class="loading-spark">✨</div>
+          <div class="loading-text" id="wordsLoadingText">AI is translating...</div>
+          <div class="loading-bar"></div>
+        </div>
+      </div>
+
+      <!-- Editor step -->
+      <div id="wordsEditorStep" style="display:none;">
+        <div class="editor-toolbar">
+          <span class="editor-count">Jami: <strong id="wordsEditorCount">0</strong> ta so'z</span>
+        </div>
+        <div class="vocab-table" id="wordsVocabTable">
+          <!-- JS orqali to'ldiriladi -->
+        </div>
+        <div class="btn-row" style="margin-bottom:10px;">
+          <button class="btn btn-secondary" id="wordsAddWordBtn" type="button">+ SO'Z QO'SHISH</button>
+          <button class="btn btn-danger-ghost" id="wordsClearAllBtn" type="button">🗑 HAMMASINI TOZALASH</button>
+        </div>
+        <button class="btn btn-primary btn-block" id="wordsGeneratePdfBtn" type="button">
+          <span>📄</span><span>PDF YARATISH</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================= SCREEN: STUDY ======================= -->
+    <section class="screen" id="screen-study" aria-labelledby="studyHeading">
+      <div class="subscreen-top">
+        <button class="back-btn" type="button" data-nav="home" aria-label="Orqaga">←</button>
+        <div>
+          <h2 class="section-title mb-0" id="studyHeading">📚 Study Mode</h2>
+        </div>
+      </div>
+      <p class="section-sub">So'nggi saqlangan lug'atingiz asosida o'zingizni sinab ko'ring.</p>
+
+      <div id="studyContent">
+        <!-- JS orqali to'ldiriladi -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================== BOTTOM NAV ============================== -->
+  <nav class="bottom-nav" aria-label="Asosiy navigatsiya">
+    <div class="bottom-nav-inner">
+      <button class="nav-btn is-active" type="button" data-nav="home">
+        <span class="nav-icon">🏠</span><span>Home</span>
+      </button>
+      <button class="nav-btn" type="button" data-nav="notebook">
+        <span class="nav-icon">📷</span><span>Notebook</span>
+      </button>
+      <button class="nav-btn" type="button" data-nav="words">
+        <span class="nav-icon">✍️</span><span>Words</span>
+      </button>
+      <button class="nav-btn" type="button" data-nav="study">
+        <span class="nav-icon">📚</span><span>Study</span>
+      </button>
+    </div>
+  </nav>
+
+</div>
+
+<!-- ============================== SETTINGS MODAL (API KEY) ============================== -->
+<div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title" id="settingsModalTitle">Sozlamalar</h2>
+    <p class="modal-sub">API key faqat shu brauzerning localStorage xotirasida saqlanadi. Hech qayerga yuborilmaydi — faqat to'g'ridan-to'g'ri Groq API'ga.</p>
+
+    <div class="theme-toggle-row">
+      <div>
+        <div class="theme-toggle-label">Ko'rinish rejimi</div>
+        <div class="theme-toggle-sub">Light / Dark / Tizim bo'yicha</div>
+      </div>
+      <div class="segmented" id="themeSegmented">
+        <button type="button" data-theme-choice="light">Light</button>
+        <button type="button" data-theme-choice="dark">Dark</button>
+        <button type="button" data-theme-choice="system">Auto</button>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="apiKeyInput">Groq API Key</label>
+      <div class="key-input-row">
+        <input type="password" class="text-field" id="apiKeyInput" placeholder="gsk_..." autocomplete="off" spellcheck="false">
+        <button type="button" class="key-toggle-visibility" id="apiKeyVisibilityBtn" aria-label="Key'ni ko'rsatish/yashirish">👁️</button>
+      </div>
+      <div class="field-hint">Key <a href="https://console.groq.com" target="_blank" rel="noopener noreferrer">console.groq.com</a> saytidan olinadi. Bu ilova faqat shaxsiy foydalanish uchun — key kodning o'zida konfiguratsiya sifatida ham saqlanadi.</div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="apiModelInput">Model nomi</label>
+      <input type="text" class="text-field" id="apiModelInput" placeholder="llama-3.3-70b-versatile">
+      <div class="field-hint">Standart: <span id="defaultModelHint">—</span>. Kerak bo'lsa boshqa Groq model nomiga o'zgartiring.</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" style="flex:1;" id="settingsCancelBtn" type="button">Bekor qilish</button>
+      <button class="btn btn-primary" style="flex:1;" id="settingsSaveBtn" type="button">Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== TOAST HOST ============================== -->
+<div class="toast-host" id="toastHost" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   1. CONFIG — Groq API sozlamalari.
+   ============================================================ */
+const CONFIG = {
+    GROQ_API_KEY: "YOUR_GROQ_API_KEY",     // <-- BU YERGA O'Z GROQ API KEYINGIZNI QO'YING
+    GROQ_MODEL: "llama-3.3-70b-versatile", // matn va tarjima uchun Groq modeli
+    GROQ_API_URL: "https://api.groq.com/openai/v1/chat/completions",
+    GROQ_VISION_MODEL: "llama-3.2-11b-vision-preview", // OCR (rasmdan o'qish) uchun vision model
+    REQUEST_TIMEOUT_MS: 60000,
+    MAX_IMAGE_DIMENSION: 1600,
+    MAX_IMAGE_BYTES_BEFORE_COMPRESS: 1_500_000,
+    MAX_UPLOAD_BYTES: 20_000_000
+};
+
+/* ============================================================
+   2. CONSTANTS & STATE
+   ============================================================ */
+const LS_KEYS = {
+    API_KEY: "myVocabAI.apiKey",
+    API_MODEL: "myVocabAI.apiModel",
+    THEME: "myVocabAI.theme",
+    LAST_MODE: "myVocabAI.lastMode",
+    HISTORY: "myVocabAI.history",
+    LAST_VOCAB: "myVocabAI.lastVocab"
+};
+
+const MAX_HISTORY_ITEMS = 12;
+
+const AppState = {
+    currentScreen: "home",
+    theme: "system",
+
+    notebookImage: {
+        dataUrl: null,
+        mimeType: null,
+        fileName: null,
+        sizeBytes: null
+    },
+    notebookVocab: [],
+    notebookBusy: false,
+
+    wordsVocab: [],
+    wordsBusy: false,
+
+    studyDeck: [],
+    studyIndex: 0,
+    studyRevealed: false
+};
+
+/* ============================================================
+   3. UTIL FUNCTIONS
+   ============================================================ */
+function uid() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        return window.crypto.randomUUID();
+    }
+    return "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+}
+
+function escapeHtml(str) {
+    if (str === null || str === undefined) return "";
+    return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function formatDateHuman(date) {
+    try {
+        return new Intl.DateTimeFormat("uz-UZ", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+    } catch (e) {
+        const months = ["Yan","Fev","Mar","Apr","May","Iyun","Iyul","Avg","Sen","Okt","Noy","Dek"];
+        return `${String(date.getDate()).padStart(2,"0")} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    }
+}
+
+function formatDateISO(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+function formatBytes(bytes) {
+    if (!bytes && bytes !== 0) return "—";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function withTimeout(promise, ms, timeoutMessage) {
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(timeoutMessage || "So'rov vaqti tugadi.")), ms);
+    });
+    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+}
+
+function $(selector, root = document) { return root.querySelector(selector); }
+function $id(id) { return document.getElementById(id); }
+
+function cleanWhitespace(str) {
+    return String(str || "").replace(/\s+/g, " ").trim();
+}
+
+/* ============================================================
+   4. TOAST / BANNER SYSTEM
+   ============================================================ */
+function showToast(message, durationMs = 2600) {
+    const host = $id("toastHost");
+    if (!host) return;
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = message;
+    host.appendChild(el);
+    setTimeout(() => {
+        el.classList.add("is-leaving");
+        setTimeout(() => el.remove(), 200);
+    }, durationMs);
+}
+
+function showBanner(containerId, { title, text, type = "error" }) {
+    const container = $id(containerId);
+    if (!container) return;
+    container.innerHTML = "";
+
+    const banner = document.createElement("div");
+    banner.className = "state-banner" + (type === "warn" ? " is-warn" : "");
+
+    const icon = document.createElement("span");
+    icon.className = "state-banner-icon";
+    icon.textContent = type === "warn" ? "⚠️" : "✕";
+
+    const body = document.createElement("div");
+    body.style.flex = "1";
+    body.style.minWidth = "0";
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "state-banner-title";
+    titleEl.textContent = title || "";
+
+    const textEl = document.createElement("div");
+    textEl.className = "state-banner-text";
+    textEl.textContent = text || "";
+
+    body.appendChild(titleEl);
+    body.appendChild(textEl);
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "state-banner-close";
+    closeBtn.type = "button";
+    closeBtn.setAttribute("aria-label", "Xabarni yopish");
+    closeBtn.textContent = "✕";
+    closeBtn.addEventListener("click", () => clearBanner(containerId));
+
+    banner.appendChild(icon);
+    banner.appendChild(body);
+    banner.appendChild(closeBtn);
+    container.appendChild(banner);
+}
+
+function clearBanner(containerId) {
+    const container = $id(containerId);
+    if (container) container.innerHTML = "";
+}
+
+/* ============================================================
+   5. THEME — light / dark / system
+   ============================================================ */
+function applyTheme(theme) {
+    AppState.theme = theme;
+    const root = document.documentElement;
+    if (theme === "light") {
+        root.setAttribute("data-theme", "light");
+    } else if (theme === "dark") {
+        root.setAttribute("data-theme", "dark");
+    } else {
+        root.removeAttribute("data-theme");
+    }
+    document.querySelectorAll("#themeSegmented button").forEach(btn => {
+        btn.classList.toggle("is-active", btn.dataset.themeChoice === theme);
+    });
+}
+
+function initTheme() {
+    const saved = localStorage.getItem(LS_KEYS.THEME);
+    applyTheme(saved || "system");
+}
+
+function cycleTheme() {
+    const order = ["system", "light", "dark"];
+    const nextIndex = (order.indexOf(AppState.theme) + 1) % order.length;
+    const next = order[nextIndex];
+    applyTheme(next);
+    safeLocalStorageSet(LS_KEYS.THEME, next);
+    const labels = { system: "Tizim bo'yicha", light: "Yorug' rejim", dark: "Tungi rejim" };
+    showToast(labels[next] || next);
+}
+
+/* ============================================================
+   6. STORAGE (localStorage)
+   ============================================================ */
+function safeLocalStorageGet(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch (e) {
+        return null;
+    }
+}
+
+function safeLocalStorageSet(key, value) {
+    try {
+        localStorage.setItem(key, value);
+        return true;
+    } catch (e) {
+        showToast("Xotiraga saqlab bo'lmadi.", 3400);
+        return false;
+    }
+}
+
+function safeLocalStorageRemove(key) {
+    try {
+        localStorage.removeItem(key);
+    } catch (e) {}
+}
+
+function getActiveApiKey() {
+    const saved = safeLocalStorageGet(LS_KEYS.API_KEY);
+    if (saved && saved.trim()) return saved.trim();
+    if (CONFIG.GROQ_API_KEY && CONFIG.GROQ_API_KEY !== "YOUR_GROQ_API_KEY") {
+        return CONFIG.GROQ_API_KEY.trim();
+    }
+    return "";
+}
+
+function getActiveModel() {
+    const saved = safeLocalStorageGet(LS_KEYS.API_MODEL);
+    if (saved && saved.trim()) return saved.trim();
+    return CONFIG.GROQ_MODEL;
+}
+
+/* ============================================================
+   7. NAVIGATION
+   ============================================================ */
+function goToScreen(screenName) {
+    const validScreens = ["home", "notebook", "words", "study"];
+    if (!validScreens.includes(screenName)) screenName = "home";
+
+    document.querySelectorAll(".screen").forEach(el => el.classList.remove("is-active"));
+    const target = $id(`screen-${screenName}`);
+    if (target) target.classList.add("is-active");
+
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.classList.toggle("is-active", btn.dataset.nav === screenName);
+    });
+
+    AppState.currentScreen = screenName;
+    window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+
+    if (screenName !== "home") {
+        safeLocalStorageSet(LS_KEYS.LAST_MODE, screenName);
+    }
+
+    if (screenName === "home") {
+        renderHistoryList();
+    }
+    if (screenName === "study") {
+        initStudyMode();
+    }
+}
+
+/* ============================================================
+   8. IMAGE HANDLING
+   ============================================================ */
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+function resetNotebookImage() {
+    AppState.notebookImage = { dataUrl: null, mimeType: null, fileName: null, sizeBytes: null };
+    $id("previewWrap").style.display = "none";
+    $id("previewImg").src = "";
+    $id("fileInput").value = "";
+    updateOcrButtonState();
+}
+
+async function handleImageFile(file) {
+    clearBanner("notebookBanners");
+    if (!file) return;
+
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+        showBanner("notebookBanners", {
+            title: "Qo'llab-quvvatlanmaydigan format",
+            text: "Iltimos JPEG, PNG yoki WebP formatidagi rasm yuklang.",
+            type: "error"
+        });
+        return;
+    }
+
+    if (file.size > CONFIG.MAX_UPLOAD_BYTES) {
+        showBanner("notebookBanners", {
+            title: "Rasm juda katta",
+            text: `Fayl hajmi ${formatBytes(CONFIG.MAX_UPLOAD_BYTES)} dan oshmasligi kerak.`,
+            type: "error"
+        });
+        return;
+    }
+
+    try {
+        const rawDataUrl = await readFileAsDataUrl(file);
+        const processed = await maybeCompressImage(rawDataUrl, file.type);
+
+        AppState.notebookImage = {
+            dataUrl: processed.dataUrl,
+            mimeType: processed.mimeType,
+            fileName: file.name,
+            sizeBytes: processed.approxBytes
+        };
+
+        renderImagePreview();
+        updateOcrButtonState();
+    } catch (err) {
+        showBanner("notebookBanners", {
+            title: "Rasmni o'qib bo'lmadi",
+            text: "Fayl buzilgan bo'lishi mumkin. Boshqa rasm bilan urinib ko'ring.",
+            type: "error"
+        });
+    }
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error || new Error("FileReader xatosi"));
+        reader.readAsDataURL(file);
+    });
+}
+
+function maybeCompressImage(dataUrl, originalMimeType) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const { width, height } = img;
+            const approxOriginalBytes = Math.round((dataUrl.length * 3) / 4);
+
+            const needsResize = width > CONFIG.MAX_IMAGE_DIMENSION || height > CONFIG.MAX_IMAGE_DIMENSION;
+            const needsCompress = approxOriginalBytes > CONFIG.MAX_IMAGE_BYTES_BEFORE_COMPRESS;
+
+            if (!needsResize && !needsCompress) {
+                resolve({ dataUrl, mimeType: originalMimeType, approxBytes: approxOriginalBytes });
+                return;
+            }
+
+            let targetW = width;
+            let targetH = height;
+            if (needsResize) {
+                const scale = CONFIG.MAX_IMAGE_DIMENSION / Math.max(width, height);
+                targetW = Math.round(width * scale);
+                targetH = Math.round(height * scale);
+            }
+
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.width = targetW;
+                canvas.height = targetH;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) throw new Error("Canvas 2D context olinmadi");
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(0, 0, targetW, targetH);
+                ctx.drawImage(img, 0, 0, targetW, targetH);
+
+                const outDataUrl = canvas.toDataURL("image/jpeg", 0.86);
+                const approxBytes = Math.round((outDataUrl.length * 3) / 4);
+                resolve({ dataUrl: outDataUrl, mimeType: "image/jpeg", approxBytes });
+            } catch (e) {
+                reject(e);
+            }
+        };
+        img.onerror = () => reject(new Error("Rasm decode qilinmadi"));
+        img.src = dataUrl;
+    });
+}
+
+function renderImagePreview() {
+    const { dataUrl, fileName, sizeBytes } = AppState.notebookImage;
+    if (!dataUrl) return;
+    $id("previewImg").src = dataUrl;
+    $id("previewFileName").textContent = fileName || "rasm";
+    $id("previewFileSize").textContent = formatBytes(sizeBytes);
+    $id("previewWrap").style.display = "block";
+}
+
+function updateOcrButtonState() {
+    const btn = $id("ocrRunBtn");
+    btn.disabled = !AppState.notebookImage.dataUrl || AppState.notebookBusy;
+}
+
+/* ============================================================
+   9. GROQ API CALLS
+   ============================================================ */
+
+const OCR_SYSTEM_PROMPT = `You are an English vocabulary notebook OCR assistant.
+
+Read the handwritten vocabulary from this image.
+Extract ONLY vocabulary items.
+Preserve multi-word expressions as ONE vocabulary item.
+
+Return ONLY valid JSON, with no markdown code fences, no preamble, no explanation:
+
+[
+  {
+    "english": "...",
+    "uzbek": "...",
+    "confidence": 0.0
+  }
+]
+
+confidence must be a number between 0 and 1.
+If the image contains no readable vocabulary at all, return an empty JSON array: []`;
+
+const TRANSLATION_SYSTEM_PROMPT = `You are an English-to-Uzbek vocabulary translation assistant for a beginner English learner.
+
+You will receive a list of English words or phrases.
+For each item, provide the single most natural, most commonly used Uzbek translation.
+
+If the input is a multi-word phrase, translate it as ONE unit.
+
+Return ONLY valid JSON, with no markdown code fences, no preamble, no explanation:
+
+[
+  {
+    "english": "...",
+    "uzbek": "..."
+  }
+]`;
+
+async function callGroqAPI(messages, { model } = {}) {
+    const apiKey = getActiveApiKey();
+    if (!apiKey) {
+        const err = new Error("API_KEY_MISSING");
+        err.code = "API_KEY_MISSING";
+        throw err;
+    }
+
+    const usedModel = model || getActiveModel();
+
+    const requestBody = {
+        model: usedModel,
+        messages: messages,
+        temperature: 0.2
+    };
+
+    let response;
+    try {
+        response = await withTimeout(
+            fetch(CONFIG.GROQ_API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKey}`
+                },
+                body: JSON.stringify(requestBody)
+            }),
+            CONFIG.REQUEST_TIMEOUT_MS,
+            "Groq API javob berish vaqti tugadi (timeout)."
+        );
+    } catch (networkErr) {
+        const err = new Error("NETWORK_ERROR");
+        err.code = "NETWORK_ERROR";
+        err.detail = networkErr && networkErr.message ? networkErr.message : String(networkErr);
+        throw err;
+    }
+
+    if (!response.ok) {
+        let bodyText = "";
+        try { bodyText = await response.text(); } catch (_) {}
+
+        const err = new Error("API_ERROR");
+        err.code = "API_ERROR";
+        err.status = response.status;
+        err.detail = bodyText;
+
+        if (response.status === 401 || response.status === 403) {
+            err.code = "API_KEY_INVALID";
+        } else if (response.status === 429) {
+            err.code = "RATE_LIMITED";
+        } else if (response.status >= 500) {
+            err.code = "SERVER_ERROR";
+        }
+        throw err;
+    }
+
+    let data;
+    try {
+        data = await response.json();
+    } catch (parseErr) {
+        const err = new Error("INVALID_RESPONSE_JSON");
+        err.code = "INVALID_RESPONSE_JSON";
+        throw err;
+    }
+
+    const content = data?.choices?.[0]?.message?.content;
+    if (typeof content !== "string" || !content.trim()) {
+        const err = new Error("EMPTY_RESPONSE");
+        err.code = "EMPTY_RESPONSE";
+        throw err;
+    }
+
+    return content;
+}
+
+async function runNotebookOCR() {
+    const { dataUrl } = AppState.notebookImage;
+    if (!dataUrl) {
+        const err = new Error("IMAGE_NOT_SELECTED");
+        err.code = "IMAGE_NOT_SELECTED";
+        throw err;
+    }
+
+    const messages = [
+        { role: "system", content: OCR_SYSTEM_PROMPT },
+        {
+            role: "user",
+            content: [
+                { type: "text", text: "Read the vocabulary from this notebook photo and return the JSON array as instructed." },
+                { type: "image_url", image_url: { url: dataUrl } }
+            ]
+        }
+    ];
+
+    const rawContent = await callGroqAPI(messages, { model: CONFIG.GROQ_VISION_MODEL || getActiveModel() });
+    const parsed = parseVocabJsonFromModel(rawContent);
+
+    if (!parsed.length) {
+        const err = new Error("OCR_NO_RESULT");
+        err.code = "OCR_NO_RESULT";
+        throw err;
+    }
+
+    return parsed.map(item => ({
+        id: uid(),
+        english: cleanWhitespace(item.english),
+        uzbek: cleanWhitespace(item.uzbek),
+        confidence: clampConfidence(item.confidence)
+    })).filter(item => item.english);
+}
+
+async function runWordsTranslation(words) {
+    if (!words || !words.length) {
+        const err = new Error("EMPTY_INPUT");
+        err.code = "EMPTY_INPUT";
+        throw err;
+    }
+
+    const userPayload = JSON.stringify(words, null, 0);
+
+    const messages = [
+        { role: "system", content: TRANSLATION_SYSTEM_PROMPT },
+        {
+            role: "user",
+            content: `Translate the following English words/phrases into Uzbek. Input JSON array:\n${userPayload}\n\nReturn ONLY the JSON array described in your instructions, with exactly ${words.length} items.`
+        }
+    ];
+
+    const rawContent = await callGroqAPI(messages, { model: getActiveModel() });
+    const parsed = parseVocabJsonFromModel(rawContent);
+
+    if (!parsed.length) {
+        const err = new Error("TRANSLATION_NO_RESULT");
+        err.code = "TRANSLATION_NO_RESULT";
+        throw err;
+    }
+
+    return parsed.map(item => ({
+        id: uid(),
+        english: cleanWhitespace(item.english),
+        uzbek: cleanWhitespace(item.uzbek)
+    })).filter(item => item.english);
+}
+
+function clampConfidence(value) {
+    const num = Number(value);
+    if (Number.isNaN(num)) return 0.5;
+    return Math.max(0, Math.min(1, num));
+}
+
+/* ============================================================
+   10. JSON PARSING HELPERS
+   ============================================================ */
+function parseVocabJsonFromModel(rawText) {
+    const jsonString = extractJsonArrayString(rawText);
+
+    if (!jsonString) {
+        const err = new Error("INVALID_JSON");
+        err.code = "INVALID_JSON";
+        throw err;
+    }
+
+    let data;
+    try {
+        data = JSON.parse(jsonString);
+    } catch (e) {
+        const err = new Error("INVALID_JSON");
+        err.code = "INVALID_JSON";
+        throw err;
+    }
+
+    if (!Array.isArray(data)) {
+        const err = new Error("INVALID_JSON");
+        err.code = "INVALID_JSON";
+        throw err;
+    }
+
+    return data.filter(item =>
+        item &&
+        typeof item === "object" &&
+        typeof item.english === "string"
+    );
+}
+
+function extractJsonArrayString(rawText) {
+    if (!rawText || typeof rawText !== "string") return null;
+
+    let text = rawText.trim();
+
+    const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fenceMatch && fenceMatch[1]) {
+        text = fenceMatch[1].trim();
+    }
+
+    if (!text.startsWith("[")) {
+        const firstBracket = text.indexOf("[");
+        const lastBracket = text.lastIndexOf("]");
+        if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+            text = text.slice(firstBracket, lastBracket + 1);
+        }
+    }
+
+    text = text.trim();
+    if (!text.startsWith("[") || !text.endsWith("]")) return null;
+    return text;
+}
+
+/* ============================================================
+   ERROR MESSAGES
+   ============================================================ */
+const ERROR_MESSAGES = {
+    API_KEY_MISSING: {
+        title: "API key kiritilmagan",
+        text: "Please add your Groq API key. Yuqoridagi ⚙️ Sozlamalar tugmasi orqali Groq API keyingizni kiriting."
+    },
+    API_KEY_INVALID: {
+        title: "API key noto'g'ri",
+        text: "Groq API bilan aloqa o'rnatilmadi: key qabul qilinmadi. Sozlamalardan keyni tekshiring."
+    },
+    NETWORK_ERROR: {
+        title: "Tarmoq xatosi",
+        text: "Groq API bilan aloqa o'rnatilmadi. Internet aloqasini tekshiring."
+    },
+    RATE_LIMITED: {
+        title: "So'rovlar chegarasi",
+        text: "Groq API juda ko'p so'rov qabul qildi. Bir necha soniyadan keyin qayta urinib ko'ring."
+    },
+    SERVER_ERROR: {
+        title: "Groq server xatosi",
+        text: "Groq API serverida vaqtinchalik muammo yuz berdi."
+    },
+    API_ERROR: {
+        title: "API xatosi",
+        text: "Groq API bilan aloqa o'rnatilmadi. Qaytadan urinib ko'ring."
+    },
+    INVALID_RESPONSE_JSON: {
+        title: "Javobni o'qib bo'lmadi",
+        text: "Groq API'dan kelgan javobni tushunib bo'lmadi."
+    },
+    EMPTY_RESPONSE: {
+        title: "Bo'sh javob",
+        text: "Groq hech qanday natija qaytarmadi."
+    },
+    INVALID_JSON: {
+        title: "Natijani tushunib bo'lmadi",
+        text: "AI javobini JSON formatga o'girib bo'lmadi."
+    },
+    IMAGE_NOT_SELECTED: {
+        title: "Rasm tanlanmagan",
+        text: "Iltimos avval daftar rasmini yuklang."
+    },
+    OCR_NO_RESULT: {
+        title: "Vocabulary topilmadi",
+        text: "AI rasmda o'qiladigan vocabulary topa olmadi."
+    },
+    EMPTY_INPUT: {
+        title: "Matn kiritilmagan",
+        text: "Iltimos avval tarjima qilinadigan inglizcha so'zlarni kiriting."
+    },
+    TRANSLATION_NO_RESULT: {
+        title: "Tarjima topilmadi",
+        text: "AI tarjimani qaytara olmadi."
+    },
+    UNKNOWN: {
+        title: "Kutilmagan xato",
+        text: "Nimadir noto'g'ri ketdi. Qaytadan urinib ko'ring."
+    }
+};
+
+function displayCaughtError(bannerContainerId, error) {
+    console.error("Ilova xatosi:", error);
+    const code = (error && error.code) || "UNKNOWN";
+    const info = ERROR_MESSAGES[code] || ERROR_MESSAGES.UNKNOWN;
+    showBanner(bannerContainerId, { title: info.title, text: info.text, type: "error" });
+}
+
+/* ============================================================
+   11. VOCAB EDITOR
+   ============================================================ */
+function renderVocabTable(mode) {
+    const isNotebook = mode === "notebook";
+    const vocab = isNotebook ? AppState.notebookVocab : AppState.wordsVocab;
+    const tableEl = $id(isNotebook ? "notebookVocabTable" : "wordsVocabTable");
+    const countEl = $id(isNotebook ? "notebookEditorCount" : "wordsEditorCount");
+
+    countEl.textContent = String(vocab.length);
+    tableEl.innerHTML = "";
+
+    const head = document.createElement("div");
+    head.className = "vocab-row vocab-row-head" + (isNotebook ? " has-confidence" : "");
+    head.innerHTML = isNotebook
+        ? `<span>№</span><span>English</span><span>O'zbekcha</span><span>Conf.</span><span></span>`
+        : `<span>№</span><span>English</span><span>O'zbekcha</span><span></span>`;
+    tableEl.appendChild(head);
+
+    if (!vocab.length) {
+        const emptyRow = document.createElement("div");
+        emptyRow.style.padding = "20px 14px";
+        emptyRow.style.fontSize = "13px";
+        emptyRow.style.color = "var(--ink-faint)";
+        emptyRow.style.textAlign = "center";
+        emptyRow.textContent = "Hozircha so'z yo'q. Pastdagi \"+ SO'Z QO'SHISH\" tugmasi orqali qo'shing.";
+        tableEl.appendChild(emptyRow);
+        return;
+    }
+
+    vocab.forEach((item, index) => {
+        const isLow = isNotebook && typeof item.confidence === "number" && item.confidence < 0.5;
+
+        const row = document.createElement("div");
+        row.className = "vocab-row" + (isNotebook ? " has-confidence" : "") + (isLow ? " is-low-confidence" : "");
+        row.dataset.id = item.id;
+
+        const idxSpan = document.createElement("span");
+        idxSpan.className = "vocab-idx";
+        idxSpan.textContent = String(index + 1);
+        row.appendChild(idxSpan);
+
+        const engInput = document.createElement("input");
+        engInput.type = "text";
+        engInput.className = "vocab-cell-input cell-english";
+        engInput.value = item.english || "";
+        engInput.addEventListener("input", () => {
+            item.english = engInput.value;
+            persistVocabDraft(mode);
+        });
+        row.appendChild(engInput);
+
+        const uzInput = document.createElement("input");
+        uzInput.type = "text";
+        uzInput.className = "vocab-cell-input cell-uzbek";
+        uzInput.value = item.uzbek || "";
+        uzInput.addEventListener("input", () => {
+            item.uzbek = uzInput.value;
+            persistVocabDraft(mode);
+        });
+        row.appendChild(uzInput);
+
+        if (isNotebook) {
+            const confSpan = document.createElement("span");
+            const confVal = typeof item.confidence === "number" ? item.confidence : 1;
+            let confClass = "conf-high";
+            if (confVal < 0.5) confClass = "conf-low";
+            else if (confVal < 0.75) confClass = "conf-mid";
+            confSpan.className = "vocab-confidence " + confClass;
+            confSpan.textContent = Math.round(confVal * 100) + "%";
+            row.appendChild(confSpan);
+        }
+
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.className = "row-delete";
+        delBtn.textContent = "✕";
+        delBtn.addEventListener("click", () => {
+            removeVocabItem(mode, item.id);
+        });
+        row.appendChild(delBtn);
+
+        tableEl.appendChild(row);
+
+        if (isLow) {
+            const note = document.createElement("div");
+            note.className = "low-confidence-note";
+            note.textContent = "⚠ Noaniq o'qildi — matnni tekshirib, kerak bo'lsa to'g'rilang.";
+            tableEl.appendChild(note);
+        }
+    });
+}
+
+function removeVocabItem(mode, id) {
+    if (mode === "notebook") {
+        AppState.notebookVocab = AppState.notebookVocab.filter(v => v.id !== id);
+    } else {
+        AppState.wordsVocab = AppState.wordsVocab.filter(v => v.id !== id);
+    }
+    persistVocabDraft(mode);
+    renderVocabTable(mode);
+}
+
+function addEmptyVocabItem(mode) {
+    const newItem = mode === "notebook"
+        ? { id: uid(), english: "", uzbek: "", confidence: 1 }
+        : { id: uid(), english: "", uzbek: "" };
+
+    if (mode === "notebook") {
+        AppState.notebookVocab.push(newItem);
+    } else {
+        AppState.wordsVocab.push(newItem);
+    }
+    persistVocabDraft(mode);
+    renderVocabTable(mode);
+
+    requestAnimationFrame(() => {
+        const tableEl = $id(mode === "notebook" ? "notebookVocabTable" : "wordsVocabTable");
+        const rows = tableEl.querySelectorAll(".vocab-row:not(.vocab-row-head)");
+        const lastRow = rows[rows.length - 1];
+        if (lastRow) {
+            const engInput = lastRow.querySelector(".cell-english");
+            if (engInput) engInput.focus();
+        }
+    });
+}
+
+function persistVocabDraft(mode) {
+    const vocab = mode === "notebook" ? AppState.notebookVocab : AppState.wordsVocab;
+    const payload = { mode, date: new Date().toISOString(), vocab };
+    safeLocalStorageSet(LS_KEYS.LAST_VOCAB, JSON.stringify(payload));
+}
+
+/* ============================================================
+   12. PDF GENERATOR & HISTORY
+   ============================================================ */
+function getHistory() {
+    try {
+        const raw = safeLocalStorageGet(LS_KEYS.HISTORY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveHistory(mode, vocab) {
+    if (!vocab || !vocab.length) return;
+    const history = getHistory();
+    const title = vocab[0].english + (vocab.length > 1 ? ` va yana ${vocab.length - 1} ta` : "");
+    const newItem = {
+        id: uid(),
+        mode: mode,
+        title: title,
+        date: formatDateHuman(new Date()),
+        timestamp: Date.now(),
+        vocab: vocab
+    };
+    const updated = [newItem, ...history.filter(h => h.id !== newItem.id)].slice(0, MAX_HISTORY_ITEMS);
+    safeLocalStorageSet(LS_KEYS.HISTORY, JSON.stringify(updated));
+}
+
+function deleteHistoryItem(id) {
+    const history = getHistory().filter(h => h.id !== id);
+    safeLocalStorageSet(LS_KEYS.HISTORY, JSON.stringify(history));
+    renderHistoryList();
+    showToast("Tarixdan o'chirildi.");
+}
+
+function renderHistoryList() {
+    const container = $id("historyList");
+    if (!container) return;
+    const history = getHistory();
+    container.innerHTML = "";
+
+    if (!history.length) {
+        container.innerHTML = `<div class="empty-hint">Hali saqlangan lug'atlar yo'q. Notebook yoki Words bo'limidan foydalanib ko'ring.</div>`;
+        return;
+    }
+
+    history.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "history-item";
+
+        const icon = document.createElement("div");
+        icon.className = "history-item-icon";
+        icon.textContent = item.mode === "notebook" ? "📷" : "✍️";
+
+        const textWrap = document.createElement("div");
+        textWrap.className = "history-item-text";
+
+        const title = document.createElement("div");
+        title.className = "history-item-title";
+        title.textContent = item.title;
+
+        const meta = document.createElement("div");
+        meta.className = "history-item-meta";
+        meta.textContent = `${item.date} • ${item.vocab.length} ta so'z`;
+
+        textWrap.appendChild(title);
+        textWrap.appendChild(meta);
+
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.className = "history-item-delete";
+        delBtn.textContent = "🗑";
+        delBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            deleteHistoryItem(item.id);
+        });
+
+        div.appendChild(icon);
+        div.appendChild(textWrap);
+        div.appendChild(delBtn);
+
+        div.addEventListener("click", () => {
+            if (item.mode === "notebook") {
+                AppState.notebookVocab = [...item.vocab];
+                $id("notebookUploadStep").style.display = "none";
+                $id("notebookLoadingStep").style.display = "none";
+                $id("notebookEditorStep").style.display = "block";
+                renderVocabTable("notebook");
+                goToScreen("notebook");
+            } else {
+                AppState.wordsVocab = [...item.vocab];
+                $id("wordsInputStep").style.display = "none";
+                $id("wordsLoadingStep").style.display = "none";
+                $id("wordsEditorStep").style.display = "block";
+                renderVocabTable("words");
+                goToScreen("words");
+            }
+        });
+
+        container.appendChild(div);
+    });
+}
+
+function generatePdf(mode) {
+    if (window.__PDF_LIB_FAILED || !window.jspdf) {
+        showToast("PDF kutubxonasi yuklanmagan. Internet aloqasini tekshiring.");
+        return;
+    }
+
+    const vocab = mode === "notebook" ? AppState.notebookVocab : AppState.wordsVocab;
+    const cleanVocab = vocab.filter(v => v.english.trim() || v.uzbek.trim());
+
+    if (!cleanVocab.length) {
+        showToast("PDF yaratish uchun kamida bitta so'z bo'lishi kerak!");
+        return;
+    }
+
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.setTextColor(156, 107, 31);
+        doc.text("MY VOCABULARY AI", 14, 18);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        const dateStr = formatDateHuman(new Date());
+        doc.text(`Sana: ${dateStr} | Jami: ${cleanVocab.length} ta so'z`, 14, 25);
+
+        const tableBody = cleanVocab.map((v, i) => [
+            String(i + 1),
+            v.english.trim(),
+            v.uzbek.trim()
+        ]);
+
+        doc.autoTable({
+            startY: 30,
+            head: [["№", "English", "O'zbekcha"]],
+            body: tableBody,
+            theme: "grid",
+            headStyles: {
+                fillColor: [156, 107, 31],
+                textColor: [255, 255, 255],
+                fontStyle: "bold",
+                fontSize: 11
+            },
+            bodyStyles: {
+                fontSize: 10,
+                textColor: [27, 27, 24]
+            },
+            columnStyles: {
+                0: { cellWidth: 12, halign: "center" },
+                1: { cellWidth: 85 },
+                2: { cellWidth: 85 }
+            },
+            alternateRowStyles: {
+                fillColor: [246, 242, 233]
+            }
+        });
+
+        const fileName = `Vocabulary_${formatDateISO(new Date())}.pdf`;
+        doc.save(fileName);
+        saveHistory(mode, cleanVocab);
+        showToast("PDF muvaffaqiyatli yuklab olindi!");
+    } catch (err) {
+        console.error("PDF yaratishda xato:", err);
+        showToast("PDF yaratishda xatolik yuz berdi.");
+    }
+}
+
+/* ============================================================
+   13. STUDY MODE
+   ============================================================ */
+function initStudyMode() {
+    const container = $id("studyContent");
+    if (!container) return;
+
+    let deck = AppState.notebookVocab.length ? AppState.notebookVocab : AppState.wordsVocab;
+    if (!deck.length) {
+        const history = getHistory();
+        if (history.length) {
+            deck = history[0].vocab;
+        }
+    }
+
+    const cleanDeck = deck.filter(v => v.english.trim() && v.uzbek.trim());
+
+    if (!cleanDeck.length) {
+        container.innerHTML = `
+            <div class="study-empty">
+                <span class="glyph">📚</span>
+                <p>O'rganish uchun lug'at topilmadi.</p>
+                <p style="font-size:13px;">Avval Notebook yoki Words bo'limida lug'at yarating.</p>
+            </div>
+        `;
+        return;
+    }
+
+    AppState.studyDeck = cleanDeck;
+    AppState.studyIndex = 0;
+    AppState.studyRevealed = false;
+
+    renderStudyCard();
+}
+
+function renderStudyCard() {
+    const container = $id("studyContent");
+    if (!container) return;
+
+    const deck = AppState.studyDeck;
+    const idx = AppState.studyIndex;
+    const current = deck[idx];
+    const progress = Math.round(((idx + 1) / deck.length) * 100);
+
+    container.innerHTML = `
+        <div class="study-card">
+            <div class="study-progress">
+                <div class="study-progress-fill" style="width: ${progress}%;"></div>
+            </div>
+            <div class="study-label">${idx + 1} / ${deck.length}</div>
+            <div class="study-word">${escapeHtml(current.english)}</div>
+            <div class="study-answer" id="studyAnswerText">${AppState.studyRevealed ? escapeHtml(current.uzbek) : "• • • • •"}</div>
+        </div>
+        <div class="study-nav-row">
+            <button class="btn btn-secondary" id="studyPrevBtn" type="button" ${idx === 0 ? "disabled" : ""}>← Oldingisi</button>
+            <button class="btn btn-primary" id="studyRevealBtn" type="button">${AppState.studyRevealed ? "Yashirish" : "Tarjimani ko'rsatish"}</button>
+            <button class="btn btn-secondary" id="studyNextBtn" type="button" ${idx === deck.length - 1 ? "disabled" : ""}>Keyingisi →</button>
+        </div>
+    `;
+
+    $id("studyRevealBtn").addEventListener("click", () => {
+        AppState.studyRevealed = !AppState.studyRevealed;
+        renderStudyCard();
+    });
+
+    $id("studyPrevBtn").addEventListener("click", () => {
+        if (AppState.studyIndex > 0) {
+            AppState.studyIndex--;
+            AppState.studyRevealed = false;
+            renderStudyCard();
+        }
+    });
+
+    $id("studyNextBtn").addEventListener("click", () => {
+        if (AppState.studyIndex < deck.length - 1) {
+            AppState.studyIndex++;
+            AppState.studyRevealed = false;
+            renderStudyCard();
+        }
+    });
+}
+
+/* ============================================================
+   14. SETTINGS MODAL
+   ============================================================ */
+function openSettingsModal() {
+    const modal = $id("settingsModal");
+    const keyInput = $id("apiKeyInput");
+    const modelInput = $id("apiModelInput");
+    const hint = $id("defaultModelHint");
+
+    if (keyInput) keyInput.value = safeLocalStorageGet(LS_KEYS.API_KEY) || "";
+    if (modelInput) modelInput.value = safeLocalStorageGet(LS_KEYS.API_MODEL) || "";
+    if (hint) hint.textContent = CONFIG.GROQ_MODEL;
+
+    if (modal) modal.classList.add("is-open");
+}
+
+function closeSettingsModal() {
+    const modal = $id("settingsModal");
+    if (modal) modal.classList.remove("is-open");
+}
+
+function saveSettings() {
+    const keyInput = $id("apiKeyInput");
+    const modelInput = $id("apiModelInput");
+
+    if (keyInput) {
+        const val = keyInput.value.trim();
+        if (val) {
+            safeLocalStorageSet(LS_KEYS.API_KEY, val);
+        } else {
+            safeLocalStorageRemove(LS_KEYS.API_KEY);
+        }
+    }
+
+    if (modelInput) {
+        const val = modelInput.value.trim();
+        if (val) {
+            safeLocalStorageSet(LS_KEYS.API_MODEL, val);
+        } else {
+            safeLocalStorageRemove(LS_KEYS.API_MODEL);
+        }
+    }
+
+    closeSettingsModal();
+    showToast("Sozlamalar saqlandi.");
+}
+
+/* ============================================================
+   15. EVENT WIRING & INIT
+   ============================================================ */
+function initApp() {
+    initTheme();
+
+    try {
+        const rawLast = safeLocalStorageGet(LS_KEYS.LAST_VOCAB);
+        if (rawLast) {
+            const draft = JSON.parse(rawLast);
+            if (draft.mode === "notebook" && Array.isArray(draft.vocab) && draft.vocab.length) {
+                AppState.notebookVocab = draft.vocab;
+            } else if (draft.mode === "words" && Array.isArray(draft.vocab) && draft.vocab.length) {
+                AppState.wordsVocab = draft.vocab;
+            }
+        }
+    } catch (_) {}
+
+    // Event handlers
+    $id("brandHomeBtn").addEventListener("click", () => goToScreen("home"));
+    $id("themeToggleBtn").addEventListener("click", cycleTheme);
+
+    document.querySelectorAll("[data-nav]").forEach(btn => {
+        btn.addEventListener("click", () => goToScreen(btn.dataset.nav));
+    });
+
+    const uploadZone = $id("uploadZone");
+    const fileInput = $id("fileInput");
+
+    uploadZone.addEventListener("click", () => fileInput.click());
+    uploadZone.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInput.click();
+        }
+    });
+
+    uploadZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        uploadZone.classList.add("is-dragover");
+    });
+
+    uploadZone.addEventListener("dragleave", () => {
+        uploadZone.classList.remove("is-dragover");
+    });
+
+    uploadZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove("is-dragover");
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleImageFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener("change", (e) => {
+        if (e.target.files && e.target.files[0]) {
+            handleImageFile(e.target.files[0]);
+        }
+    });
+
+    $id("previewRemoveBtn").addEventListener("click", resetNotebookImage);
+
+    $id("ocrRunBtn").addEventListener("click", async () => {
+        if (AppState.notebookBusy || !AppState.notebookImage.dataUrl) return;
+
+        AppState.notebookBusy = true;
+        updateOcrButtonState();
+        clearBanner("notebookBanners");
+
+        $id("notebookUploadStep").style.display = "none";
+        $id("notebookLoadingStep").style.display = "block";
+        $id("notebookEditorStep").style.display = "none";
+
+        try {
+            const vocab = await runNotebookOCR();
+            AppState.notebookVocab = vocab;
+            persistVocabDraft("notebook");
+            renderVocabTable("notebook");
+
+            $id("notebookLoadingStep").style.display = "none";
+            $id("notebookEditorStep").style.display = "block";
+        } catch (err) {
+            $id("notebookLoadingStep").style.display = "none";
+            $id("notebookUploadStep").style.display = "block";
+            displayCaughtError("notebookBanners", err);
+        } finally {
+            AppState.notebookBusy = false;
+            updateOcrButtonState();
+        }
+    });
+
+    $id("notebookAddWordBtn").addEventListener("click", () => addEmptyVocabItem("notebook"));
+    $id("notebookClearAllBtn").addEventListener("click", () => {
+        AppState.notebookVocab = [];
+        persistVocabDraft("notebook");
+        renderVocabTable("notebook");
+    });
+    $id("notebookGeneratePdfBtn").addEventListener("click", () => generatePdf("notebook"));
+
+    $id("wordsTextarea").addEventListener("input", (e) => {
+        const rawText = e.target.value;
+        const words = rawText.split(/[\n,]+/).map(w => w.trim()).filter(Boolean);
+        $id("wordsDetectedCount").textContent = `${words.length} ta so'z aniqlandi`;
+        $id("translateRunBtn").disabled = words.length === 0 || AppState.wordsBusy;
+    });
+
+    $id("translateRunBtn").addEventListener("click", async () => {
+        if (AppState.wordsBusy) return;
+
+        const rawText = $id("wordsTextarea").value;
+        const words = rawText.split(/[\n,]+/).map(w => w.trim()).filter(Boolean);
+
+        if (!words.length) {
+            showBanner("wordsBanners", { title: "So'z kiritilmagan", text: "Iltimos tarjima qilish uchun kamida bitta so'z kiriting.", type: "error" });
+            return;
+        }
+
+        AppState.wordsBusy = true;
+        $id("translateRunBtn").disabled = true;
+        clearBanner("wordsBanners");
+
+        $id("wordsInputStep").style.display = "none";
+        $id("wordsLoadingStep").style.display = "block";
+        $id("wordsEditorStep").style.display = "none";
+
+        try {
+            const vocab = await runWordsTranslation(words);
+            AppState.wordsVocab = vocab;
+            persistVocabDraft("words");
+            renderVocabTable("words");
+
+            $id("wordsLoadingStep").style.display = "none";
+            $id("wordsEditorStep").style.display = "block";
+        } catch (err) {
+            $id("wordsLoadingStep").style.display = "none";
+            $id("wordsInputStep").style.display = "block";
+            displayCaughtError("wordsBanners", err);
+        } finally {
+            AppState.wordsBusy = false;
+            $id("translateRunBtn").disabled = false;
+        }
+    });
+
+    $id("wordsAddWordBtn").addEventListener("click", () => addEmptyVocabItem("words"));
+    $id("wordsClearAllBtn").addEventListener("click", () => {
+        AppState.wordsVocab = [];
+        persistVocabDraft("words");
+        renderVocabTable("words");
+    });
+    $id("wordsGeneratePdfBtn").addEventListener("click", () => generatePdf("words"));
+
+    $id("settingsBtn").addEventListener("click", openSettingsModal);
+    $id("settingsCancelBtn").addEventListener("click", closeSettingsModal);
+    $id("settingsSaveBtn").addEventListener("click", saveSettings);
+
+    $id("apiKeyVisibilityBtn").addEventListener("click", () => {
+        const input = $id("apiKeyInput");
+        if (input.type === "password") {
+            input.type = "text";
+            $id("apiKeyVisibilityBtn").textContent = "🙈";
+        } else {
+            input.type = "password";
+            $id("apiKeyVisibilityBtn").textContent = "👁️";
+        }
+    });
+
+    document.querySelectorAll("#themeSegmented button").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const choice = btn.dataset.themeChoice;
+            applyTheme(choice);
+            safeLocalStorageSet(LS_KEYS.THEME, choice);
+        });
+    });
+
+    $id("settingsModal").addEventListener("click", (e) => {
+        if (e.target === $id("settingsModal")) {
+            closeSettingsModal();
+        }
+    });
+
+    goToScreen("home");
+}
+
+document.addEventListener("DOMContentLoaded", initApp);
+</script>
+
+</body>
+</html>

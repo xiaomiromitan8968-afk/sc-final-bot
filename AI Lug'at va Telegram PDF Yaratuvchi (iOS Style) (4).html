@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="uz" class="h-full dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Vocabulary PDF & Practice - iOS Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', '"Helvetica Neue"', 'sans-serif'],
+                    },
+                    colors: {
+                        ios: {
+                            bg: '#070a12',
+                            card: 'rgba(22, 28, 45, 0.65)',
+                            border: 'rgba(255, 255, 255, 0.12)',
+                            blue: '#007AFF',
+                            indigo: '#5E5CE6',
+                            teal: '#30B0C7',
+                            pink: '#FF2D55',
+                            purple: '#AF52DE',
+                            green: '#34C759'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- jsPDF, html2canvas va autoTable CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+            background-color: #070a12;
+            color: #f1f5f9;
+        }
+
+        /* iOS 27 Ultra Translucent Liquid Glass Aesthetics */
+        .ios-glass {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+        }
+
+        .ios-glass-header {
+            background: rgba(11, 15, 25, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .ios-glass-input {
+            background: rgba(15, 23, 42, 0.35);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .ios-glass-input:focus {
+            border-color: rgba(0, 122, 255, 0.7);
+            box-shadow: 0 0 20px rgba(0, 122, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .ios-glass-btn {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 6px 20px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .ios-glass-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.35);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 8px 25px rgba(0, 122, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .ios-glass-btn:active {
+            transform: scale(0.96);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .ios-glass-icon {
+            background: rgba(255, 255, 255, 0.09);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .ios-glow-1 {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(94, 92, 230, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
+            top: -100px;
+            left: -100px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .ios-glow-2 {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(0, 122, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            bottom: -150px;
+            right: -150px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        #customBgLayer {
+            transition: all 0.5s ease-in-out;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .preset-badge {
+            transition: all 0.2s ease;
+        }
+        .preset-badge.active {
+            border-color: #007AFF !important;
+            box-shadow: 0 0 12px rgba(0, 122, 255, 0.5);
+        }
+
+        /* Flashcard 3D Flip Styles */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+    </style>
+</head>
+
+<body class="min-h-full flex flex-col relative overflow-x-hidden selection:bg-ios-blue selection:text-white" id="appBody">
+
+    <!-- Dynamic Custom Background Layer -->
+    <div id="customBgLayer" class="fixed inset-0 pointer-events-none -z-10"></div>
+
+    <!-- Glowing background ambient lights -->
+    <div class="ios-glow-1" id="glow1"></div>
+    <div class="ios-glow-2" id="glow2"></div>
+
+    <header class="ios-glass-header sticky top-0 z-40 w-full transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-2xl ios-glass-icon flex items-center justify-center shadow-lg text-ios-blue border border-white/20">
+                    <i class="fa-solid fa-brain text-base drop-shadow-[0_0_8px_rgba(0,122,255,0.6)]"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">Vocabulary Builder</h1>
+                    <p class="text-[11px] text-ios-blue font-medium tracking-wide">iOS 27 Glass Lexicon & Interactive Practice</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button onclick="openPracticeModal()" class="px-3.5 py-2 rounded-full ios-glass-btn text-emerald-400 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20 text-xs font-semibold flex items-center space-x-2">
+                    <i class="fa-solid fa-gamepad text-xs"></i>
+                    <span class="hidden sm:inline">Mashqlar (Practice)</span>
+                </button>
+                <button onclick="openSettings()" class="px-3.5 py-2 rounded-full ios-glass-btn text-slate-100 text-xs font-semibold flex items-center space-x-2">
+                    <div class="w-5 h-5 rounded-full ios-glass-icon flex items-center justify-center">
+                        <i class="fa-solid fa-sliders text-ios-blue text-[10px]"></i>
+                    </div>
+                    <span class="hidden sm:inline">Sozlamalar</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-4xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6 relative z-10">
+        
+        <div class="p-1.5 ios-glass rounded-2xl flex items-center space-x-2">
+            <button onclick="switchTab('text')" id="tabTextBtn" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 ios-glass-btn bg-ios-blue/25 border-ios-blue/50 text-white shadow-lg shadow-ios-blue/20 flex items-center justify-center space-x-2 backdrop-blur-2xl">
+                <i class="fa-solid fa-align-left text-sm text-ios-blue drop-shadow-[0_0_6px_rgba(0,122,255,0.5)]"></i>
+                <span>Matn Kiritish</span>
+            </button>
+            <button onclick="switchTab('image')" id="tabImageBtn" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold text-slate-300/80 hover:text-white transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-white/5">
+                <i class="fa-solid fa-camera text-sm opacity-70"></i>
+                <span>Rasmdan So'z Olish</span>
+            </button>
+        </div>
+
+        <div id="textTabContent" class="ios-glass rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-2">
+                    <span class="w-6 h-6 rounded-lg ios-glass-icon flex items-center justify-center">
+                        <i class="fa-solid fa-language text-ios-blue text-xs"></i>
+                    </span>
+                    <span>Inglizcha Matn yoki So'zlar Ro'yxati</span>
+                </label>
+                <div class="flex space-x-2">
+                    <button onclick="loadSample()" class="text-[11px] font-semibold ios-glass-btn text-ios-blue bg-ios-blue/15 border-ios-blue/30 hover:bg-ios-blue/25 px-3 py-1 rounded-full transition">
+                        Namuna
+                    </button>
+                    <button onclick="clearInput()" class="text-[11px] font-semibold ios-glass-btn text-slate-300 hover:text-white px-3 py-1 rounded-full transition">
+                        Tozalash
+                    </button>
+                </div>
+            </div>
+
+            <textarea id="wordInput" rows="6" placeholder="Inglizcha so'zlarni yoki butun matnni kiritishingiz mumkin (Masalan: nearly, look for, die, bonus...)" class="w-full ios-glass-input rounded-2xl p-4 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-y transition"></textarea>
+
+            <button id="generateBtn" onclick="generateDictionary()" class="w-full py-3.5 px-6 rounded-2xl ios-glass-btn bg-gradient-to-r from-ios-blue/30 via-indigo-600/30 to-ios-indigo/30 border-ios-blue/40 hover:border-ios-blue/70 text-white font-bold text-xs sm:text-sm shadow-xl shadow-ios-blue/20 backdrop-blur-2xl flex items-center justify-center space-x-2.5">
+                <span class="w-7 h-7 rounded-xl ios-glass-icon flex items-center justify-center text-ios-blue">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                </span>
+                <span>AI bilan Lug'at Yaratish va Tarjima Qilish</span>
+            </button>
+        </div>
+
+        <div id="imageTabContent" class="ios-glass rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 hidden">
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-2">
+                <span class="w-6 h-6 rounded-lg ios-glass-icon flex items-center justify-center">
+                    <i class="fa-solid fa-file-image text-ios-teal text-xs"></i>
+                </span>
+                <span>Inglizcha Matnli Rasm Yuklash</span>
+            </label>
+
+            <div id="dropZone" onclick="document.getElementById('imageInput').click()" class="border-2 border-dashed border-white/20 hover:border-ios-blue/60 ios-glass rounded-3xl p-8 text-center cursor-pointer transition group flex flex-col items-center justify-center space-y-3">
+                <div class="w-14 h-14 rounded-2xl ios-glass-icon text-ios-teal group-hover:scale-110 transition flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-200">Rasmni bu yerga tashlang yoki tanlash uchun bosing</p>
+                    <p class="text-[11px] text-slate-400 mt-1">PNG, JPG, JPEG fayllar qo'llab-quvvatlanadi</p>
+                </div>
+                <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+            </div>
+
+            <div id="imagePreviewContainer" class="relative hidden rounded-2xl overflow-hidden border border-white/20 bg-black/50">
+                <img id="imagePreview" src="" alt="Yuklangan rasm" class="max-h-64 mx-auto object-contain py-2">
+                <button onclick="clearImage(event)" class="absolute top-3 right-3 w-8 h-8 rounded-full ios-glass-btn text-white flex items-center justify-center transition backdrop-blur-md shadow-lg border-rose-500/40 bg-rose-600/30">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <button id="generateImgBtn" onclick="generateFromImage()" class="w-full py-3.5 px-6 rounded-2xl ios-glass-btn bg-gradient-to-r from-ios-teal/25 via-cyan-600/25 to-ios-blue/25 border-ios-teal/40 hover:border-ios-teal/70 text-white font-bold text-xs sm:text-sm shadow-xl shadow-ios-teal/20 backdrop-blur-2xl flex items-center justify-center space-x-2.5">
+                <span class="w-7 h-7 rounded-xl ios-glass-icon flex items-center justify-center text-ios-teal">
+                    <i class="fa-solid fa-eye text-xs"></i>
+                </span>
+                <span>Rasmdan So'zlarni Ajratib Tarjima Qilish</span>
+            </button>
+        </div>
+
+        <div id="statusBox" class="hidden ios-glass rounded-2xl p-4 border border-ios-blue/30 bg-ios-blue/10 flex items-center justify-center space-x-3 animate-pulse">
+            <div class="w-5 h-5 border-2 border-ios-blue border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-xs font-semibold text-ios-blue">AI ma'lumotlarni qayta ishlamoqda va tarjima qilmoqda...</span>
+        </div>
+
+        <!-- Notification Alert Box -->
+        <div id="errorAlertBox" class="hidden ios-glass rounded-2xl p-4 flex items-start space-x-3.5 border border-ios-pink/40 bg-ios-pink/10">
+            <i class="fa-solid fa-circle-exclamation text-ios-pink text-lg mt-0.5"></i>
+            <div>
+                <h4 class="text-xs font-bold text-ios-pink uppercase tracking-wider">Diqqat</h4>
+                <p id="errorMessageText" class="text-xs text-slate-200 mt-0.5 leading-relaxed"></p>
+            </div>
+        </div>
+
+        <div id="dictionaryPreviewContainer" class="hidden ios-glass rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                <div class="flex items-center space-x-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
+                    <h3 class="font-bold text-sm text-slate-100">Tayyorlangan Lug'at</h3>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="openPracticeModal()" class="px-3 py-1 rounded-full ios-glass-btn text-emerald-400 bg-emerald-500/15 border-emerald-500/30 hover:bg-emerald-500/25 text-xs font-semibold flex items-center space-x-1.5">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <span>Yodlash va Amaliyot</span>
+                    </button>
+                    <span id="wordCountBadge" class="text-xs font-semibold text-ios-blue bg-ios-blue/15 border border-ios-blue/30 px-3 py-1 rounded-full backdrop-blur-md">0 ta so'z</span>
+                </div>
+            </div>
+
+            <!-- Glass Word Cards List -->
+            <div id="tableBody" class="space-y-2.5">
+                <!-- Dynamic glass rows -->
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="ios-glass rounded-3xl p-8 text-center space-y-3">
+            <div class="w-14 h-14 rounded-2xl ios-glass-icon text-slate-300 mx-auto flex items-center justify-center">
+                <i class="fa-solid fa-list-check text-2xl"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-200">Lug'at ro'yxati hozircha bo'sh</h3>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">Yuqoridagi maydonga inglizcha so'zlarni kiriting yoki rasm yuklang va tarjima tugmasini bosing.</p>
+        </div>
+
+        <div id="actionButtons" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <button onclick="downloadPDFLocally()" class="py-3.5 px-5 rounded-2xl ios-glass-btn text-white font-bold text-xs sm:text-sm transition flex items-center justify-center space-x-2.5 shadow-lg">
+                <div class="w-7 h-7 rounded-xl ios-glass-icon flex items-center justify-center text-rose-400">
+                    <i class="fa-solid fa-file-pdf text-sm"></i>
+                </div>
+                <span>PDF yuklab olish</span>
+            </button>
+            <button onclick="sendToTelegram()" class="py-3.5 px-5 rounded-2xl ios-glass-btn bg-sky-500/20 border-sky-400/40 hover:border-sky-400/70 text-white font-bold text-xs sm:text-sm transition flex items-center justify-center space-x-2.5 shadow-lg shadow-sky-500/10">
+                <div class="w-7 h-7 rounded-xl ios-glass-icon flex items-center justify-center text-sky-400">
+                    <i class="fa-paper-plane fa-solid text-xs"></i>
+                </div>
+                <span>Telegramga Yuborish</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- 🧠 INTERACTIVE PRACTICE & LEARNING MODAL -->
+    <div id="practiceModal" class="fixed inset-0 bg-black/80 backdrop-blur-xl hidden items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="ios-glass rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-white/20 space-y-6 animate-in fade-in zoom-in-95 duration-200 my-auto">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-2xl ios-glass-icon text-emerald-400 flex items-center justify-center shadow-lg border border-emerald-400/30">
+                        <i class="fa-solid fa-brain text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-100 text-base">Amaliyot va Yodlash</h3>
+                        <p class="text-[11px] text-emerald-400 font-medium">Interaktiv Flesh-karta hamda Testlar</p>
+                    </div>
+                </div>
+                <button onclick="closePracticeModal()" class="w-8 h-8 rounded-full ios-glass-btn text-slate-300 flex items-center justify-center transition hover:text-white"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+
+            <!-- Practice Navigation Tabs -->
+            <div class="p-1 ios-glass rounded-2xl flex items-center space-x-1">
+                <button onclick="switchPracticeMode('flashcards')" id="pracTabFlashcards" class="flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all duration-300 ios-glass-btn bg-emerald-500/30 border-emerald-500/50 text-white shadow-md flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-clone text-emerald-400"></i>
+                    <span>Flashcards</span>
+                </button>
+                <button onclick="switchPracticeMode('quiz')" id="pracTabQuiz" class="flex-1 py-2 px-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all duration-300 flex items-center justify-center space-x-1.5 hover:bg-white/5">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Quiz Test</span>
+                </button>
+                <button onclick="switchPracticeMode('spelling')" id="pracTabSpelling" class="flex-1 py-2 px-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all duration-300 flex items-center justify-center space-x-1.5 hover:bg-white/5">
+                    <i class="fa-solid fa-keyboard"></i>
+                    <span>Spelling</span>
+                </button>
+                <button onclick="switchPracticeMode('match')" id="pracTabMatch" class="flex-1 py-2 px-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all duration-300 flex items-center justify-center space-x-1.5 hover:bg-white/5">
+                    <i class="fa-solid fa-puzzle-piece"></i>
+                    <span>Match Words</span>
+                </button>
+            </div>
+
+            <!-- MODE 1: FLASHCARDS -->
+            <div id="pracModeFlashcards" class="space-y-5 block">
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-300 px-1">
+                    <span id="fcProgressText">Karta: 1 / 10</span>
+                    <span id="fcStatsText" class="text-emerald-400">0 bilindi, 0 takrorlanadi</span>
+                </div>
+
+                <!-- 3D Flip Card Container -->
+                <div class="perspective-1000 w-full h-64 sm:h-72 cursor-pointer" onclick="flipFlashcard()">
+                    <div id="flashcardInner" class="transform-style-3d transition-transform duration-500 relative w-full h-full">
+                        <!-- Card Front (English Word) -->
+                        <div class="backface-hidden absolute inset-0 ios-glass rounded-3xl p-6 border border-white/20 bg-gradient-to-br from-white/10 via-slate-900/60 to-black/80 flex flex-col items-center justify-center space-y-4 shadow-2xl">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-ios-blue bg-ios-blue/20 px-3 py-1 rounded-full border border-ios-blue/30">Inglizcha</span>
+                            <h2 id="fcFrontText" class="text-2xl sm:text-3xl font-extrabold text-white text-center tracking-wide">Word</h2>
+                            <button onclick="speakFcCurrentWord(event)" class="w-10 h-10 rounded-2xl ios-glass-btn text-ios-blue hover:text-white flex items-center justify-center transition shadow-lg">
+                                <i class="fa-solid fa-volume-high text-base"></i>
+                            </button>
+                            <p class="text-[11px] text-slate-400 flex items-center space-x-1">
+                                <i class="fa-solid fa-rotate text-[10px]"></i>
+                                <span>Aylantirish uchun bosing</span>
+                            </p>
+                        </div>
+                        <!-- Card Back (Uzbek Translation) -->
+                        <div class="backface-hidden rotate-y-180 absolute inset-0 ios-glass rounded-3xl p-6 border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/80 to-black/90 flex flex-col items-center justify-center space-y-4 shadow-2xl">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/30">O'zbekcha Tarjimasi</span>
+                            <h2 id="fcBackText" class="text-2xl sm:text-3xl font-extrabold text-emerald-300 text-center tracking-wide">Tarjima</h2>
+                            <p class="text-xs text-slate-300 text-center italic max-w-sm" id="fcBackExample"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flashcard Action Buttons -->
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="markFcWord(false)" class="py-3.5 px-4 rounded-2xl ios-glass-btn bg-rose-500/15 border-rose-500/30 hover:bg-rose-500/25 text-rose-300 font-bold text-xs sm:text-sm flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-arrow-rotate-left"></i>
+                        <span>Qaytarish kerak</span>
+                    </button>
+                    <button onclick="markFcWord(true)" class="py-3.5 px-4 rounded-2xl ios-glass-btn bg-emerald-500/20 border-emerald-500/40 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs sm:text-sm flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Bilaman</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- MODE 2: QUIZ TEST -->
+            <div id="pracModeQuiz" class="space-y-5 hidden">
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-300 px-1">
+                    <span id="quizProgressText">Savol: 1 / 10</span>
+                    <span id="quizScoreText" class="text-ios-blue">Ball: 0</span>
+                </div>
+
+                <div class="ios-glass rounded-3xl p-6 border border-white/20 text-center space-y-2">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-ios-blue bg-ios-blue/20 px-3 py-1 rounded-full border border-ios-blue/30">To'g'ri tarjimani toping</span>
+                    <h2 id="quizQuestionText" class="text-2xl font-extrabold text-white pt-2">English Word</h2>
+                </div>
+
+                <div id="quizOptionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Dynamic quiz options -->
+                </div>
+            </div>
+
+            <!-- MODE 3: SPELLING TEST -->
+            <div id="pracModeSpelling" class="space-y-5 hidden">
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-300 px-1">
+                    <span id="spellProgressText">Savol: 1 / 10</span>
+                    <span id="spellScoreText" class="text-ios-purple">Natija: 0</span>
+                </div>
+
+                <div class="ios-glass rounded-3xl p-6 border border-white/20 text-center space-y-2">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-ios-purple bg-ios-purple/20 px-3 py-1 rounded-full border border-ios-purple/30">Inglizcha yozilishini kiriting</span>
+                    <h2 id="spellUzText" class="text-2xl font-extrabold text-white pt-2">O'zbekcha Tarjima</h2>
+                </div>
+
+                <div class="space-y-3">
+                    <input type="text" id="spellInput" placeholder="Inglizcha so'zni yozing..." autocomplete="off" class="w-full ios-glass-input rounded-2xl px-4 py-3.5 text-sm text-center font-bold text-white placeholder-slate-500 focus:outline-none tracking-wide">
+                    
+                    <button onclick="checkSpelling()" class="w-full py-3.5 px-6 rounded-2xl ios-glass-btn bg-ios-purple/30 border-ios-purple/50 hover:bg-ios-purple/40 text-white font-bold text-xs sm:text-sm shadow-lg flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Tekshirish</span>
+                    </button>
+                </div>
+
+                <div id="spellFeedback" class="hidden text-center text-xs font-bold p-3 rounded-2xl"></div>
+            </div>
+
+            <!-- MODE 4: MATCH WORDS -->
+            <div id="pracModeMatch" class="space-y-4 hidden">
+                <p class="text-xs text-slate-300 text-center">Inglizcha so'z va uning o'zbekcha tarjimasini ketma-ket bosib juftlang:</p>
+                <div id="matchGrid" class="grid grid-cols-2 gap-2.5">
+                    <!-- Dynamic word matching cards -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/70 backdrop-blur-md hidden items-center justify-center z-50 p-4 transition-all duration-300 overflow-y-auto">
+        <div class="ios-glass rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-white/20 space-y-5 animate-in fade-in zoom-in-95 duration-200 my-8">
+            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-full ios-glass-icon text-ios-blue flex items-center justify-center">
+                        <i class="fa-solid fa-gear text-xs"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-100 text-base">Dastur Sozlamalari</h3>
+                </div>
+                <button onclick="closeSettings()" class="w-8 h-8 rounded-full ios-glass-btn text-slate-300 flex items-center justify-center transition"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            
+            <!-- Settings Modal Navigation Tabs -->
+            <div class="p-1 ios-glass rounded-2xl flex items-center">
+                <button onclick="switchSettingsTab('bg')" id="setTabBgBtn" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all duration-300 ios-glass-btn bg-ios-blue/30 border-ios-blue/50 text-white shadow-md flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-palette text-ios-blue text-xs"></i>
+                    <span>Orqa Fon</span>
+                </button>
+                <button onclick="switchSettingsTab('pdf')" id="setTabPdfBtn" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-white/5">
+                    <i class="fa-solid fa-file-pdf text-xs opacity-70"></i>
+                    <span>PDF Stili</span>
+                </button>
+                <button onclick="switchSettingsTab('tg')" id="setTabTgBtn" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-white/5">
+                    <i class="fa-brands fa-telegram text-xs opacity-70"></i>
+                    <span>Telegram</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: Orqa fon sozlamalari -->
+            <div id="settingsBgTab" class="space-y-4 block">
+                <p class="text-xs text-slate-300">Ilova orqa fonini o'zingizga mos ravishda sozlang:</p>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">Tayyor Fon Stillari</label>
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <button onclick="selectBgPreset('default')" id="btnPresetDefault" class="preset-badge p-2.5 rounded-2xl ios-glass-btn text-left transition flex flex-col items-center justify-center space-y-1 group">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-ios-blue to-ios-indigo border border-white/30"></div>
+                            <span class="text-[11px] font-medium text-slate-300 group-hover:text-white">iOS Dark</span>
+                        </button>
+
+                        <button onclick="selectBgPreset('amoled')" id="btnPresetAmoled" class="preset-badge p-2.5 rounded-2xl ios-glass-btn text-left transition flex flex-col items-center justify-center space-y-1 group">
+                            <div class="w-6 h-6 rounded-full bg-slate-950 border border-white/20"></div>
+                            <span class="text-[11px] font-medium text-slate-300 group-hover:text-white">AMOLED Qora</span>
+                        </button>
+
+                        <button onclick="selectBgPreset('purple')" id="btnPresetPurple" class="preset-badge p-2.5 rounded-2xl ios-glass-btn text-left transition flex flex-col items-center justify-center space-y-1 group">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-900 via-indigo-900 to-slate-900 border border-white/30"></div>
+                            <span class="text-[11px] font-medium text-slate-300 group-hover:text-white">Cyber Violet</span>
+                        </button>
+
+                        <button onclick="selectBgPreset('ocean')" id="btnPresetOcean" class="preset-badge p-2.5 rounded-2xl ios-glass-btn text-left transition flex flex-col items-center justify-center space-y-1 group">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-950 via-blue-900 to-slate-950 border border-white/30"></div>
+                            <span class="text-[11px] font-medium text-slate-300 group-hover:text-white">Deep Ocean</span>
+                        </button>
+
+                        <button onclick="selectBgPreset('emerald')" id="btnPresetEmerald" class="preset-badge p-2.5 rounded-2xl ios-glass-btn text-left transition flex flex-col items-center justify-center space-y-1 group">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-950 via-teal-900 to-slate-950 border border-white/30"></div>
+                            <span class="text-[11px] font-medium text-slate-300 group-hover:text-white">Emerald Dark</span>
+                        </button>
+
+                        <button onclick="selectBgPreset('gradient')" id="btnPresetGradient" class="preset-badge p-2.5 rounded-2xl ios-glass-btn text-left transition flex flex-col items-center justify-center space-y-1 group">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-rose-950 via-purple-900 to-slate-900 border border-white/30"></div>
+                            <span class="text-[11px] font-medium text-slate-300 group-hover:text-white">Sunset Glow</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-white/10 space-y-3">
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">O'zingizning Rasmingiz</label>
+                    
+                    <div>
+                        <span class="text-[11px] text-slate-400 block mb-1">1. Rasm Havolasi (URL):</span>
+                        <div class="flex space-x-2">
+                            <input type="text" id="bgUrlInput" placeholder="https://images.unsplash.com/..." class="flex-grow ios-glass-input rounded-2xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 transition outline-none">
+                            <button onclick="applyBgFromUrl()" class="px-4 py-2.5 ios-glass-btn text-xs font-semibold text-white rounded-2xl transition">O'rnatish</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="text-[11px] text-slate-400 block mb-1">2. Kompyuterdan/Telefondan Yuklash:</span>
+                        <input type="file" id="bgFileInput" accept="image/*" class="hidden" onchange="handleCustomBgUpload(event)">
+                        <button onclick="document.getElementById('bgFileInput').click()" class="w-full py-2.5 px-4 rounded-2xl ios-glass-btn text-slate-200 text-xs font-semibold transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-file-image text-ios-teal"></i>
+                            <span>Rasm faylini tanlash</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: PDF Dizayni Sozlamalari -->
+            <div id="settingsPdfTab" class="space-y-4 hidden">
+                <p class="text-xs text-slate-300 leading-relaxed">PDF yuklab olinayotganda va Telegramga yuborilayotganda lug'at so'zlari qanday uslubda ko'rinishini tanlang:</p>
+
+                <div class="grid grid-cols-1 gap-3">
+                    <button onclick="selectPdfStyle('glass_cards')" id="btnPdfGlass" class="p-4 rounded-2xl ios-glass-btn text-left flex items-start space-x-3.5 border border-ios-blue/50 bg-ios-blue/10 shadow-lg">
+                        <div class="w-8 h-8 rounded-xl ios-glass-icon text-ios-blue flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-clone text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-white flex items-center space-x-2">
+                                <span>iOS 27 Glass Kartalar</span>
+                                <span class="text-[9px] bg-ios-blue px-2 py-0.5 rounded-full uppercase">Tavsiya</span>
+                            </h4>
+                            <p class="text-[11px] text-slate-300 mt-1">Har bir so'z ekrandagi kabi yumaloqlangan shaffof shisha kartalar, iOS ramkasi va raqamli nishon shaklida PDF ga tushadi.</p>
+                        </div>
+                    </button>
+
+                    <button onclick="selectPdfStyle('table')" id="btnPdfTable" class="p-4 rounded-2xl ios-glass-btn text-left flex items-start space-x-3.5 border border-white/10 opacity-70 hover:opacity-100">
+                        <div class="w-8 h-8 rounded-xl ios-glass-icon text-slate-300 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-table text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-white">Klassik Shaffof Jadval</h4>
+                            <p class="text-[11px] text-slate-400 mt-1">Sodda va klassik jadval ko'rinishi (Orqa fon saqlanadi).</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 3: Telegram Bot Sozlamalari -->
+            <div id="settingsTgTab" class="space-y-4 hidden">
+                <p class="text-xs text-slate-300 leading-relaxed">Tayyorlangan lug'at PDF shaklida Telegramdagi <strong class="text-sky-400">Saved Messages</strong> yoki guruhlaringizga yuborilishi uchun ma'lumotlarni kiriting:</p>
+                
+                <div class="ios-glass p-3.5 rounded-2xl text-xs text-slate-300 space-y-1">
+                    <p class="font-semibold text-ios-blue flex items-center space-x-1">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Chat ID sini qanday topish mumkin?</span>
+                    </p>
+                    <p class="text-slate-400 text-[11px] leading-relaxed">Telegramda <a href="https://t.me/userinfobot" target="_blank" class="text-sky-400 underline font-medium">@userinfobot</a> ga o'ting va ID raqamingizni nusxalab oling.</p>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Bot Token</label>
+                        <input type="text" id="botTokenInput" placeholder="123456789:ABCdefGHIjklMNO..." class="w-full ios-glass-input rounded-2xl px-4 py-3 text-xs text-slate-100 placeholder-slate-500 transition outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Telegram Chat ID</label>
+                        <input type="text" id="chatIdInput" placeholder="Masalan: 987654321" class="w-full ios-glass-input rounded-2xl px-4 py-3 text-xs text-slate-100 placeholder-slate-500 transition outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-3 border-t border-white/10">
+                <button onclick="closeSettings()" class="px-5 py-2.5 rounded-2xl ios-glass-btn text-slate-300 text-xs font-semibold transition">Yopish</button>
+                <button onclick="saveSettings()" class="px-6 py-2.5 rounded-2xl ios-glass-btn bg-ios-blue/30 border-ios-blue/50 text-white text-xs font-bold transition shadow-lg shadow-ios-blue/20">Saqlash</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.currentInputMode = 'text';
+        window.currentDictionaryData = [];
+        window.uploadedImageBase64 = null;
+        window.uploadedImageMime = null;
+        window.selectedBgConfig = { type: 'default', value: '' };
+
+        // Practice State Variables
+        window.fcIndex = 0;
+        window.fcFlipped = false;
+        window.fcKnownCount = 0;
+        window.fcRepeatCount = 0;
+        
+        window.quizIndex = 0;
+        window.quizScore = 0;
+
+        window.spellIndex = 0;
+        window.spellScore = 0;
+
+        window.matchSelectedCard = null;
+
+        window.onload = function() {
+            const savedToken = localStorage.getItem('tg_bot_token');
+            const savedChatId = localStorage.getItem('tg_chat_id');
+            if (savedToken) document.getElementById('botTokenInput').value = savedToken;
+            if (savedChatId) document.getElementById('chatIdInput').value = savedChatId;
+
+            const savedBgType = localStorage.getItem('app_bg_type') || 'default';
+            const savedBgVal = localStorage.getItem('app_bg_value') || '';
+            applyBackground(savedBgType, savedBgVal);
+
+            const savedPdfStyle = localStorage.getItem('app_pdf_style') || 'glass_cards';
+            selectPdfStyle(savedPdfStyle);
+        };
+
+        function applyBackground(type, value = '') {
+            window.selectedBgConfig = { type, value };
+            const bgLayer = document.getElementById('customBgLayer');
+            const glow1 = document.getElementById('glow1');
+            const glow2 = document.getElementById('glow2');
+            const body = document.body;
+
+            bgLayer.style.backgroundImage = 'none';
+            body.style.backgroundColor = '#070a12';
+            glow1.style.display = 'block';
+            glow2.style.display = 'block';
+
+            document.querySelectorAll('.preset-badge').forEach(el => el.classList.remove('active'));
+
+            if (type === 'default') {
+                document.getElementById('btnPresetDefault')?.classList.add('active');
+            } else if (type === 'amoled') {
+                body.style.backgroundColor = '#000000';
+                glow1.style.display = 'none';
+                glow2.style.display = 'none';
+                document.getElementById('btnPresetAmoled')?.classList.add('active');
+            } else if (type === 'purple') {
+                bgLayer.style.backgroundImage = 'radial-gradient(ellipse at top left, #1e0b36 0%, #0d071a 50%, #05020a 100%)';
+                document.getElementById('btnPresetPurple')?.classList.add('active');
+            } else if (type === 'ocean') {
+                bgLayer.style.backgroundImage = 'radial-gradient(ellipse at top left, #09203f 0%, #031021 50%, #01060e 100%)';
+                document.getElementById('btnPresetOcean')?.classList.add('active');
+            } else if (type === 'emerald') {
+                bgLayer.style.backgroundImage = 'radial-gradient(ellipse at top left, #062e21 0%, #031710 50%, #010a07 100%)';
+                document.getElementById('btnPresetEmerald')?.classList.add('active');
+            } else if (type === 'gradient') {
+                bgLayer.style.backgroundImage = 'radial-gradient(circle at top right, #380036 0%, #0cbaba 100%)';
+                document.getElementById('btnPresetGradient')?.classList.add('active');
+            } else if (type === 'image_url' || type === 'image_file') {
+                if (value) {
+                    bgLayer.style.backgroundImage = `linear-gradient(rgba(7, 10, 18, 0.75), rgba(7, 10, 18, 0.85)), url('${value}')`;
+                }
+            }
+        }
+
+        function selectBgPreset(presetName) {
+            applyBackground(presetName);
+            localStorage.setItem('app_bg_type', presetName);
+            localStorage.setItem('app_bg_value', '');
+        }
+
+        function applyBgFromUrl() {
+            const url = document.getElementById('bgUrlInput').value.trim();
+            if (!url) {
+                showNotification("Iltimos, rasm havolasini kiriting!");
+                return;
+            }
+            applyBackground('image_url', url);
+            localStorage.setItem('app_bg_type', 'image_url');
+            localStorage.setItem('app_bg_value', url);
+            showNotification("Orqa fon havolasi o'rnatildi!", true);
+        }
+
+        function handleCustomBgUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                applyBackground('image_file', base64);
+                try {
+                    localStorage.setItem('app_bg_type', 'image_file');
+                    localStorage.setItem('app_bg_value', base64);
+                    showNotification("Rasm orqa fon sifatida o'rnatildi!", true);
+                } catch (e) {
+                    showNotification("Rasm hajmi katta bo'lgani uchun brauzer xotirasida saqlanmadi, lekin hozir o'rnatildi.", false);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function selectPdfStyle(style) {
+            localStorage.setItem('app_pdf_style', style);
+            const btnGlass = document.getElementById('btnPdfGlass');
+            const btnTable = document.getElementById('btnPdfTable');
+
+            if (style === 'glass_cards') {
+                btnGlass.className = "p-4 rounded-2xl ios-glass-btn text-left flex items-start space-x-3.5 border border-ios-blue/50 bg-ios-blue/10 shadow-lg";
+                btnTable.className = "p-4 rounded-2xl ios-glass-btn text-left flex items-start space-x-3.5 border border-white/10 opacity-70 hover:opacity-100";
+            } else {
+                btnTable.className = "p-4 rounded-2xl ios-glass-btn text-left flex items-start space-x-3.5 border border-ios-blue/50 bg-ios-blue/10 shadow-lg";
+                btnGlass.className = "p-4 rounded-2xl ios-glass-btn text-left flex items-start space-x-3.5 border border-white/10 opacity-70 hover:opacity-100";
+            }
+        }
+
+        function switchSettingsTab(tab) {
+            const bgBtn = document.getElementById('setTabBgBtn');
+            const pdfBtn = document.getElementById('setTabPdfBtn');
+            const tgBtn = document.getElementById('setTabTgBtn');
+            
+            const bgTab = document.getElementById('settingsBgTab');
+            const pdfTab = document.getElementById('settingsPdfTab');
+            const tgTab = document.getElementById('settingsTgTab');
+
+            [bgBtn, pdfBtn, tgBtn].forEach(b => b.className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-white/5");
+            [bgTab, pdfTab, tgTab].forEach(t => { t.classList.add('hidden'); t.classList.remove('block'); });
+
+            const activeBtnStyle = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all duration-300 ios-glass-btn bg-ios-blue/30 border-ios-blue/50 text-white shadow-md flex items-center justify-center space-x-2";
+
+            if (tab === 'bg') {
+                bgBtn.className = activeBtnStyle;
+                bgTab.classList.remove('hidden');
+                bgTab.classList.add('block');
+            } else if (tab === 'pdf') {
+                pdfBtn.className = activeBtnStyle;
+                pdfTab.classList.remove('hidden');
+                pdfTab.classList.add('block');
+            } else {
+                tgBtn.className = activeBtnStyle;
+                tgTab.classList.remove('hidden');
+                tgTab.classList.add('block');
+            }
+        }
+
+        function showNotification(message, isSuccess = false) {
+            const errBox = document.getElementById('errorAlertBox');
+            const errText = document.getElementById('errorMessageText');
+            if (!errBox || !errText) return;
+
+            errText.innerText = message;
+            if (isSuccess) {
+                errBox.className = "ios-glass border-emerald-500/40 bg-emerald-500/10 rounded-2xl p-4 flex items-start space-x-3.5 backdrop-blur-xl";
+                errBox.querySelector('i').className = "fa-solid fa-circle-check text-emerald-400 text-lg mt-0.5";
+                errBox.querySelector('h4').innerText = "Muvaffaqiyatli";
+                errBox.querySelector('h4').className = "text-xs font-bold text-emerald-400 uppercase tracking-wider";
+            } else {
+                errBox.className = "ios-glass border-ios-pink/40 bg-ios-pink/10 rounded-2xl p-4 flex items-start space-x-3.5 backdrop-blur-xl";
+                errBox.querySelector('i').className = "fa-solid fa-circle-exclamation text-ios-pink text-lg mt-0.5";
+                errBox.querySelector('h4').innerText = "Diqqat";
+                errBox.querySelector('h4').className = "text-xs font-bold text-ios-pink uppercase tracking-wider";
+            }
+            errBox.classList.remove('hidden');
+        }
+
+        function openSettings() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeSettings() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const token = document.getElementById('botTokenInput').value.trim();
+            const chatId = document.getElementById('chatIdInput').value.trim();
+            localStorage.setItem('tg_bot_token', token);
+            localStorage.setItem('tg_chat_id', chatId);
+            closeSettings();
+            showNotification("Sozlamalar muvaffaqiyatli saqlandi!", true);
+        }
+
+        function loadSample() {
+            const sampleWords = "nearly\nthe same\nlook for\nsearch for\nkill\ndie\npass away\npurple\nbonus\na lot of\nbasket\nmiddle\nsomething\nmaple leaf\nonly\nhappy\nsad\nmillionaire";
+            document.getElementById('wordInput').value = sampleWords;
+        }
+
+        function clearInput() {
+            document.getElementById('wordInput').value = '';
+        }
+
+        function switchTab(mode) {
+            window.currentInputMode = mode;
+            const textBtn = document.getElementById('tabTextBtn');
+            const imgBtn = document.getElementById('tabImageBtn');
+            const textContent = document.getElementById('textTabContent');
+            const imgContent = document.getElementById('imageTabContent');
+
+            if (mode === 'text') {
+                textBtn.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 ios-glass-btn bg-ios-blue/25 border-ios-blue/50 text-white shadow-lg shadow-ios-blue/20 flex items-center justify-center space-x-2 backdrop-blur-2xl";
+                imgBtn.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold text-slate-300/80 hover:text-white transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-white/5";
+                textContent.classList.remove('hidden');
+                textContent.classList.add('block');
+                imgContent.classList.add('hidden');
+                imgContent.classList.remove('block');
+            } else {
+                imgBtn.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 ios-glass-btn bg-ios-blue/25 border-ios-blue/50 text-white shadow-lg shadow-ios-blue/20 flex items-center justify-center space-x-2 backdrop-blur-2xl";
+                textBtn.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold text-slate-300/80 hover:text-white transition-all duration-300 flex items-center justify-center space-x-2 hover:bg-white/5";
+                imgContent.classList.remove('hidden');
+                imgContent.classList.add('block');
+                textContent.classList.add('hidden');
+                textContent.classList.remove('block');
+            }
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                window.uploadedImageMime = file.type;
+                window.uploadedImageBase64 = base64Data.split(',')[1];
+
+                document.getElementById('imagePreview').src = base64Data;
+                document.getElementById('dropZone').classList.add('hidden');
+                document.getElementById('imagePreviewContainer').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearImage(event) {
+            if(event) event.stopPropagation();
+            window.uploadedImageBase64 = null;
+            window.uploadedImageMime = null;
+            document.getElementById('imageInput').value = '';
+            document.getElementById('imagePreview').src = '';
+            document.getElementById('dropZone').classList.remove('hidden');
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+        }
+
+        async function generateDictionary() {
+            const textInput = document.getElementById('wordInput').value.trim();
+            if (!textInput) {
+                showNotification("Iltimos, avval inglizcha so'zlarni kiriting!");
+                return;
+            }
+
+            document.getElementById('errorAlertBox').classList.add('hidden');
+            const statusBox = document.getElementById('statusBox');
+            const generateBtn = document.getElementById('generateBtn');
+            statusBox.classList.remove('hidden');
+            generateBtn.disabled = true;
+
+            const promptText = "QAT'IY QOIDA: Matndan BUTUN GAPLARNI olmang va 'en' maydoniga butun gaplarni kiritmang! " +
+                "Matndagi har bir qatordan yoki gapdan FAQAT ALOHIDA lug'at so'zlarini (masalan: 'writer', 'experienced', 'doctor', 'expensive') va iboralarni (masalan: 'look for') ajratib oling. " +
+                "Har bir ajratib olingan so'zni o'zbek tiliga to'g'ri va aniq tarjima qiling. " +
+                "Javobingiz FAQAT toza JSON massivi bo'lsin: [{\"en\": \"word\", \"uz\": \"tarjimasi\"}]. Matn:\n" + textInput;
+
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [{ text: promptText }]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json"
+                }
+            };
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Tarjima qilishda server xatoligi yuz berdi.");
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (!candidate || !candidate.content?.parts?.[0]?.text) {
+                    throw new Error("AI orqali tarjima olishda xatolik.");
+                }
+
+                let jsonText = candidate.content.parts[0].text.trim();
+                if (jsonText.startsWith("```")) {
+                    jsonText = jsonText.replace(/^```json\s*/, "").replace(/^```\s*/, "").replace(/\s*```$/, "");
+                }
+
+                const parsedData = JSON.parse(jsonText);
+                window.currentDictionaryData = parsedData;
+                renderTable(parsedData);
+                showNotification(`${parsedData.length} ta so'z muvaffaqiyatli tarjima qilindi!`, true);
+
+            } catch (error) {
+                showNotification("Xatolik: " + error.message);
+            } finally {
+                statusBox.classList.add('hidden');
+                generateBtn.disabled = false;
+            }
+        }
+
+        async function generateFromImage() {
+            if (!window.uploadedImageBase64) {
+                showNotification("Iltimos, avval rasm yuklang!");
+                return;
+            }
+
+            document.getElementById('errorAlertBox').classList.add('hidden');
+            const statusBox = document.getElementById('statusBox');
+            const generateImgBtn = document.getElementById('generateImgBtn');
+            statusBox.classList.remove('hidden');
+            generateImgBtn.disabled = true;
+
+            const imagePrompt = "QAT'IY QOIDA: " +
+                "1. Gaplarni UMO'MAN tarjima qilmang va 'en' maydoniga BUTUN GAPLARNI kiritmang! " +
+                "2. Rasmda gaplar bo'lsa, ularni bo'lib, FAQAT ALOHIDA MUHIM LUG'AT SO'ZLARINI va iboralarni ajratib oling. " +
+                "3. Yordamchi gap qurilmalarini ('I am', 'She is', 'We are') tashlab yuboring, faqat mustaqil va muhim so'zlarni ajrating. " +
+                "4. Har bir ajratib olingan inglizcha so'zni o'zbek tiliga aniq lug'at shaklida tarjima qiling. " +
+                "Javobingiz FAQAT toza JSON massivi bo'lsin: [{\"en\": \"word\", \"uz\": \"tarjimasi\"}]";
+
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [
+                        { text: imagePrompt },
+                        {
+                            inlineData: {
+                                mimeType: window.uploadedImageMime,
+                                data: window.uploadedImageBase64
+                            }
+                        }
+                    ]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json"
+                }
+            };
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Rasmni tahlil qilishda xatolik.");
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (!candidate || !candidate.content?.parts?.[0]?.text) {
+                    throw new Error("AI rasmdan so'zlarni ajratib ololmadi.");
+                }
+
+                let jsonText = candidate.content.parts[0].text.trim();
+                if (jsonText.startsWith("```")) {
+                    jsonText = jsonText.replace(/^```json\s*/, "").replace(/^```\s*/, "").replace(/\s*```$/, "");
+                }
+
+                const parsedData = JSON.parse(jsonText);
+                if(parsedData.length === 0) throw new Error("Rasmda inglizcha so'zlar topilmadi.");
+
+                window.currentDictionaryData = parsedData;
+                renderTable(parsedData);
+                showNotification(`Rasmdan ${parsedData.length} ta lug'at so'zi ajratib olindi!`, true);
+
+            } catch (error) {
+                showNotification("Xatolik: " + error.message);
+            } finally {
+                statusBox.classList.add('hidden');
+                generateImgBtn.disabled = false;
+            }
+        }
+
+        function renderTable(data) {
+            const container = document.getElementById('tableBody');
+            container.innerHTML = '';
+
+            const wordCountBadge = document.getElementById('wordCountBadge');
+            if (wordCountBadge) wordCountBadge.innerText = `${data ? data.length : 0} ta so'z`;
+
+            if (!data || data.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('dictionaryPreviewContainer').classList.add('hidden');
+                document.getElementById('actionButtons').classList.add('hidden');
+                return;
+            }
+
+            data.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'ios-glass rounded-2xl p-3.5 border border-white/15 bg-white/5 hover:bg-white/10 transition-all duration-300 flex items-center justify-between gap-3 backdrop-blur-md shadow-md hover:shadow-lg hover:border-ios-blue/40 group';
+                
+                const enWord = escapeHtml(item.en || '');
+                const uzWord = escapeHtml(item.uz || '');
+                const cleanEnForSpeech = enWord.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                card.innerHTML = `
+                    <div class="flex items-center space-x-3 min-w-0 flex-1">
+                        <button onclick="speakWord('${cleanEnForSpeech}', event)" class="w-8 h-8 rounded-xl ios-glass-btn bg-ios-blue/20 border-ios-blue/40 hover:bg-ios-blue text-ios-blue hover:text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm transition-all duration-200 active:scale-95 group/num" title="Ovoz chiqarib o'qish">
+                            <span>${index + 1}</span>
+                        </button>
+                        <div class="min-w-0 flex-1 flex items-center space-x-2">
+                            <p class="text-xs sm:text-sm font-bold text-white tracking-wide truncate group-hover:text-ios-blue transition-colors">
+                                ${enWord}
+                            </p>
+                            <button onclick="speakWord('${cleanEnForSpeech}', event)" class="w-7 h-7 rounded-lg ios-glass-btn text-slate-400 hover:text-ios-blue transition flex items-center justify-center text-xs shrink-0" title="Talaffuzni tinglash">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3 min-w-0 flex-1 justify-between">
+                        <p class="text-xs sm:text-sm text-slate-200 font-medium truncate pl-2">
+                            ${uzWord}
+                        </p>
+                        <button onclick="deleteWord(${index})" class="w-8 h-8 rounded-xl ios-glass-btn text-slate-400 hover:text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/30 transition flex items-center justify-center shrink-0 ml-2" title="So'zni o'chirish">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('dictionaryPreviewContainer').classList.remove('hidden');
+            document.getElementById('actionButtons').classList.remove('hidden');
+        }
+
+        function speakWord(text, event) {
+            if (event) event.stopPropagation();
+            if (!text) return;
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                
+                const voices = window.speechSynthesis.getVoices();
+                const enVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Daniel')));
+                if (enVoice) utterance.voice = enVoice;
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                showNotification("Brauzeringiz ovozli o'qish (Text-to-Speech) xizmatini qo'llab-quvvatlamaydi.");
+            }
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function deleteWord(index) {
+            if (window.currentDictionaryData && window.currentDictionaryData.length > index) {
+                window.currentDictionaryData.splice(index, 1);
+                renderTable(window.currentDictionaryData);
+                showNotification("So'z ro'yxatdan o'chirildi!", true);
+            }
+        }
+
+        /* 🧠 INTERACTIVE PRACTICE LOGIC */
+        function openPracticeModal() {
+            if (!window.currentDictionaryData || window.currentDictionaryData.length === 0) {
+                showNotification("Amaliyot boshlash uchun kamida 1-2 ta so'z tarjima qilishingiz kerak!");
+                return;
+            }
+            const modal = document.getElementById('practiceModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            switchPracticeMode('flashcards');
+        }
+
+        function closePracticeModal() {
+            const modal = document.getElementById('practiceModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        function switchPracticeMode(mode) {
+            const btnFc = document.getElementById('pracTabFlashcards');
+            const btnQuiz = document.getElementById('pracTabQuiz');
+            const btnSpell = document.getElementById('pracTabSpelling');
+            const btnMatch = document.getElementById('pracTabMatch');
+
+            const tabFc = document.getElementById('pracModeFlashcards');
+            const tabQuiz = document.getElementById('pracModeQuiz');
+            const tabSpell = document.getElementById('pracModeSpelling');
+            const tabMatch = document.getElementById('pracModeMatch');
+
+            [btnFc, btnQuiz, btnSpell, btnMatch].forEach(b => b.className = "flex-1 py-2 px-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all duration-300 flex items-center justify-center space-x-1.5 hover:bg-white/5");
+            [tabFc, tabQuiz, tabSpell, tabMatch].forEach(t => t.classList.add('hidden'));
+
+            const activeStyle = "flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all duration-300 ios-glass-btn bg-emerald-500/30 border-emerald-500/50 text-white shadow-md flex items-center justify-center space-x-1.5";
+
+            if (mode === 'flashcards') {
+                btnFc.className = activeStyle;
+                tabFc.classList.remove('hidden');
+                initFlashcards();
+            } else if (mode === 'quiz') {
+                btnQuiz.className = activeStyle;
+                tabQuiz.classList.remove('hidden');
+                initQuiz();
+            } else if (mode === 'spelling') {
+                btnSpell.className = activeStyle;
+                tabSpell.classList.remove('hidden');
+                initSpelling();
+            } else if (mode === 'match') {
+                btnMatch.className = activeStyle;
+                tabMatch.classList.remove('hidden');
+                initMatchGame();
+            }
+        }
+
+        /* 🎴 Flashcards System */
+        function initFlashcards() {
+            window.fcIndex = 0;
+            window.fcFlipped = false;
+            window.fcKnownCount = 0;
+            window.fcRepeatCount = 0;
+            updateFlashcardUI();
+        }
+
+        function updateFlashcardUI() {
+            const data = window.currentDictionaryData;
+            if (!data || data.length === 0) return;
+
+            if (window.fcIndex >= data.length) {
+                window.fcIndex = 0; // Restart loop
+            }
+
+            const item = data[window.fcIndex];
+            const inner = document.getElementById('flashcardInner');
+            inner.classList.remove('rotate-y-180');
+            window.fcFlipped = false;
+
+            document.getElementById('fcFrontText').innerText = item.en || '';
+            document.getElementById('fcBackText').innerText = item.uz || '';
+            document.getElementById('fcBackExample').innerText = item.example ? `"${item.example}"` : '';
+
+            document.getElementById('fcProgressText').innerText = `Karta: ${window.fcIndex + 1} / ${data.length}`;
+            document.getElementById('fcStatsText').innerText = `${window.fcKnownCount} bilindi, ${window.fcRepeatCount} takrorlanadi`;
+        }
+
+        function flipFlashcard() {
+            const inner = document.getElementById('flashcardInner');
+            window.fcFlipped = !window.fcFlipped;
+            if (window.fcFlipped) {
+                inner.classList.add('rotate-y-180');
+            } else {
+                inner.classList.remove('rotate-y-180');
+            }
+        }
+
+        function speakFcCurrentWord(event) {
+            if (event) event.stopPropagation();
+            const data = window.currentDictionaryData;
+            if (data && data[window.fcIndex]) {
+                speakWord(data[window.fcIndex].en);
+            }
+        }
+
+        function markFcWord(isKnown) {
+            if (isKnown) {
+                window.fcKnownCount++;
+            } else {
+                window.fcRepeatCount++;
+            }
+            window.fcIndex++;
+            updateFlashcardUI();
+        }
+
+        /* 📝 Quiz System */
+        function initQuiz() {
+            window.quizIndex = 0;
+            window.quizScore = 0;
+            renderQuizQuestion();
+        }
+
+        function renderQuizQuestion() {
+            const data = window.currentDictionaryData;
+            if (!data || data.length === 0) return;
+
+            if (window.quizIndex >= data.length) {
+                document.getElementById('quizQuestionText').innerText = `🎉 Test Yakunlandi! Ball: ${window.quizScore} / ${data.length}`;
+                document.getElementById('quizOptionsContainer').innerHTML = `
+                    <button onclick="initQuiz()" class="col-span-full py-3.5 px-6 rounded-2xl ios-glass-btn bg-ios-blue/30 border-ios-blue/50 text-white font-bold text-xs sm:text-sm">
+                        Qaytadan Boshlash
+                    </button>
+                `;
+                return;
+            }
+
+            const currentItem = data[window.quizIndex];
+            document.getElementById('quizProgressText').innerText = `Savol: ${window.quizIndex + 1} / ${data.length}`;
+            document.getElementById('quizScoreText').innerText = `Ball: ${window.quizScore}`;
+            document.getElementById('quizQuestionText').innerText = currentItem.en || '';
+
+            // Generate Options (1 correct + 3 random choices)
+            let options = [currentItem.uz];
+            let remaining = data.filter(d => d.uz !== currentItem.uz);
+            remaining.sort(() => 0.5 - Math.random());
+            
+            for (let i = 0; i < Math.min(3, remaining.length); i++) {
+                options.push(remaining[i].uz);
+            }
+            options.sort(() => 0.5 - Math.random());
+
+            const container = document.getElementById('quizOptionsContainer');
+            container.innerHTML = '';
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "py-3.5 px-4 rounded-2xl ios-glass-btn text-white font-semibold text-xs sm:text-sm text-center transition backdrop-blur-md hover:bg-white/15";
+                btn.innerText = opt;
+                btn.onclick = () => handleQuizAnswer(opt, currentItem.uz, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function handleQuizAnswer(selected, correct, btnElement) {
+            const buttons = document.querySelectorAll('#quizOptionsContainer button');
+            buttons.forEach(b => b.disabled = true);
+
+            if (selected === correct) {
+                window.quizScore++;
+                btnElement.classList.add('bg-emerald-500/40', 'border-emerald-400');
+            } else {
+                btnElement.classList.add('bg-rose-500/40', 'border-rose-400');
+            }
+
+            setTimeout(() => {
+                window.quizIndex++;
+                renderQuizQuestion();
+            }, 900);
+        }
+
+        /* ✍️ Spelling System */
+        function initSpelling() {
+            window.spellIndex = 0;
+            window.spellScore = 0;
+            renderSpellingQuestion();
+        }
+
+        function renderSpellingQuestion() {
+            const data = window.currentDictionaryData;
+            if (!data || data.length === 0) return;
+
+            if (window.spellIndex >= data.length) {
+                document.getElementById('spellUzText').innerText = `🎉 Imlo Testi Yakunlandi! Natija: ${window.spellScore} / ${data.length}`;
+                document.getElementById('spellInput').classList.add('hidden');
+                document.getElementById('spellFeedback').className = "hidden";
+                return;
+            }
+
+            const item = data[window.spellIndex];
+            document.getElementById('spellProgressText').innerText = `Savol: ${window.spellIndex + 1} / ${data.length}`;
+            document.getElementById('spellScoreText').innerText = `Natija: ${window.spellScore}`;
+            document.getElementById('spellUzText').innerText = item.uz || '';
+            
+            const input = document.getElementById('spellInput');
+            input.classList.remove('hidden');
+            input.value = '';
+            input.focus();
+
+            const feedback = document.getElementById('spellFeedback');
+            feedback.className = "hidden";
+        }
+
+        function checkSpelling() {
+            const data = window.currentDictionaryData;
+            if (!data || !data[window.spellIndex]) return;
+
+            const inputVal = document.getElementById('spellInput').value.trim().toLowerCase();
+            const correctVal = (data[window.spellIndex].en || '').trim().toLowerCase();
+            const feedback = document.getElementById('spellFeedback');
+
+            feedback.classList.remove('hidden');
+
+            if (inputVal === correctVal) {
+                window.spellScore++;
+                feedback.innerText = "To'g'ri va aniq! 👏";
+                feedback.className = "text-center text-xs font-bold p-3 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+            } else {
+                feedback.innerText = `Xato! To'g'ri javob: "${data[window.spellIndex].en}"`;
+                feedback.className = "text-center text-xs font-bold p-3 rounded-2xl bg-rose-500/20 text-rose-300 border border-rose-500/30";
+            }
+
+            setTimeout(() => {
+                window.spellIndex++;
+                renderSpellingQuestion();
+            }, 1200);
+        }
+
+        /* 🧩 Match Words Game */
+        function initMatchGame() {
+            const data = window.currentDictionaryData;
+            if (!data || data.length === 0) return;
+
+            window.matchSelectedCard = null;
+            const container = document.getElementById('matchGrid');
+            container.innerHTML = '';
+
+            // Pick max 6 pairs
+            const sample = [...data].sort(() => 0.5 - Math.random()).slice(0, 6);
+            let cards = [];
+
+            sample.forEach((item, idx) => {
+                cards.push({ id: idx, text: item.en, type: 'en' });
+                cards.push({ id: idx, text: item.uz, type: 'uz' });
+            });
+
+            cards.sort(() => 0.5 - Math.random());
+
+            cards.forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = "py-3.5 px-3 rounded-2xl ios-glass-btn text-white font-medium text-xs sm:text-sm text-center transition backdrop-blur-md";
+                btn.innerText = c.text;
+                btn.dataset.id = c.id;
+                btn.dataset.type = c.type;
+                btn.onclick = () => handleMatchClick(btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function handleMatchClick(btn) {
+            if (btn.disabled) return;
+
+            if (!window.matchSelectedCard) {
+                window.matchSelectedCard = btn;
+                btn.classList.add('border-ios-blue', 'bg-ios-blue/30');
+            } else {
+                const prev = window.matchSelectedCard;
+
+                if (prev === btn) {
+                    btn.classList.remove('border-ios-blue', 'bg-ios-blue/30');
+                    window.matchSelectedCard = null;
+                    return;
+                }
+
+                if (prev.dataset.id === btn.dataset.id && prev.dataset.type !== btn.dataset.type) {
+                    // Match found!
+                    prev.className = "py-3.5 px-3 rounded-2xl ios-glass bg-emerald-500/20 border-emerald-500/40 text-emerald-300 font-bold text-xs sm:text-sm text-center";
+                    btn.className = "py-3.5 px-3 rounded-2xl ios-glass bg-emerald-500/20 border-emerald-500/40 text-emerald-300 font-bold text-xs sm:text-sm text-center";
+                    prev.disabled = true;
+                    btn.disabled = true;
+                    window.matchSelectedCard = null;
+                } else {
+                    // Wrong pair
+                    btn.classList.add('border-rose-500', 'bg-rose-500/30');
+                    prev.classList.add('border-rose-500', 'bg-rose-500/30');
+
+                    setTimeout(() => {
+                        btn.classList.remove('border-rose-500', 'bg-rose-500/30', 'border-ios-blue', 'bg-ios-blue/30');
+                        prev.classList.remove('border-rose-500', 'bg-rose-500/30', 'border-ios-blue', 'bg-ios-blue/30');
+                        window.matchSelectedCard = null;
+                    }, 600);
+                }
+            }
+        }
+
+        /* PDF & Telegram functions */
+        async function getAppBackgroundDataUrl() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1240;
+            canvas.height = 1754;
+            const ctx = canvas.getContext('2d');
+
+            const type = window.selectedBgConfig.type || 'default';
+            const value = window.selectedBgConfig.value || '';
+
+            if (type === 'amoled') {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (type === 'purple') {
+                const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, canvas.width * 1.2);
+                grad.addColorStop(0, '#1e0b36');
+                grad.addColorStop(0.5, '#0d071a');
+                grad.addColorStop(1, '#05020a');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (type === 'ocean') {
+                const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, canvas.width * 1.2);
+                grad.addColorStop(0, '#09203f');
+                grad.addColorStop(0.5, '#031021');
+                grad.addColorStop(1, '#01060e');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (type === 'emerald') {
+                const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, canvas.width * 1.2);
+                grad.addColorStop(0, '#062e21');
+                grad.addColorStop(0.5, '#031710');
+                grad.addColorStop(1, '#010a07');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (type === 'gradient') {
+                const grad = ctx.createRadialGradient(canvas.width, 0, 0, canvas.width, 0, canvas.width * 1.2);
+                grad.addColorStop(0, '#380036');
+                grad.addColorStop(1, '#0cbaba');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if ((type === 'image_url' || type === 'image_file') && value) {
+                try {
+                    const img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                        img.src = value;
+                    });
+                    
+                    const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+                    const x = (canvas.width / 2) - (img.width / 2) * scale;
+                    const y = (canvas.height / 2) - (img.height / 2) * scale;
+                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
+                    ctx.fillStyle = 'rgba(7, 10, 18, 0.65)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                } catch (e) {
+                    ctx.fillStyle = '#070a12';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            } else {
+                ctx.fillStyle = '#070a12';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const g1 = ctx.createRadialGradient(0, 0, 0, 0, 0, 650);
+                g1.addColorStop(0, 'rgba(94, 92, 230, 0.45)');
+                g1.addColorStop(1, 'rgba(7, 10, 18, 0)');
+                ctx.fillStyle = g1;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const g2 = ctx.createRadialGradient(canvas.width, canvas.height, 0, canvas.width, canvas.height, 800);
+                g2.addColorStop(0, 'rgba(0, 122, 255, 0.35)');
+                g2.addColorStop(1, 'rgba(7, 10, 18, 0)');
+                ctx.fillStyle = g2;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            return canvas.toDataURL('image/jpeg', 0.92);
+        }
+
+        async function createPDFBlob() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const data = window.currentDictionaryData || [];
+            const pdfStyle = localStorage.getItem('app_pdf_style') || 'glass_cards';
+            
+            let bgDataUrl = null;
+            try {
+                bgDataUrl = await getAppBackgroundDataUrl();
+            } catch (err) {
+                console.error("PDF background error:", err);
+            }
+
+            if (pdfStyle === 'table') {
+                const chunkSize = 32;
+                const totalPages = Math.ceil(data.length / chunkSize) || 1;
+
+                for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+                    if (pageIdx > 0) pdf.addPage();
+
+                    if (bgDataUrl) {
+                        pdf.addImage(bgDataUrl, 'JPEG', 0, 0, 210, 297);
+                    } else {
+                        pdf.setFillColor(7, 10, 18);
+                        pdf.rect(0, 0, 210, 297, 'F');
+                    }
+
+                    const chunk = data.slice(pageIdx * chunkSize, (pageIdx + 1) * chunkSize);
+
+                    pdf.setFontSize(18);
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setTextColor(255, 255, 255);
+                    pdf.text("English Vocabulary", 105, 14, { align: "center" });
+                    
+                    pdf.setFontSize(9);
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setTextColor(0, 122, 255);
+                    pdf.text("iOS 27 Glass Lexicon — Inglizcha-O'zbekcha", 105, 20, { align: "center" });
+
+                    pdf.autoTable({
+                        startY: 23,
+                        head: [['№', 'English Word / Phrase', 'O\'zbekcha Ma\'nosi']],
+                        body: chunk.map((item, idx) => [pageIdx * chunkSize + idx + 1, item.en || '', item.uz || '']),
+                        theme: 'plain',
+                        headStyles: { 
+                            fillColor: false, 
+                            textColor: [0, 122, 255], 
+                            fontStyle: 'bold', 
+                            fontSize: 9.5,
+                            cellPadding: 2
+                        },
+                        bodyStyles: { 
+                            fillColor: false, 
+                            textColor: [241, 245, 249], 
+                            fontSize: 8.5,
+                            cellPadding: 2
+                        },
+                        alternateRowStyles: { fillColor: false },
+                        columnStyles: {
+                            0: { cellWidth: 12, halign: 'center', fontStyle: 'bold', textColor: [0, 122, 255] },
+                            1: { cellWidth: 88, fontStyle: 'bold', textColor: [255, 255, 255] },
+                            2: { cellWidth: 88, textColor: [226, 232, 240] }
+                        },
+                        margin: { top: 23, left: 11, right: 11, bottom: 10 },
+                        styles: { font: "helvetica", overflow: 'linebreak' }
+                    });
+                }
+            } else {
+                let currentY = 22;
+                const pageHeight = 297;
+                const bottomMargin = 8;
+                const cardX = 10;
+                const cardWidth = 190;
+
+                function drawHeader() {
+                    if (bgDataUrl) {
+                        pdf.addImage(bgDataUrl, 'JPEG', 0, 0, 210, 297);
+                    } else {
+                        pdf.setFillColor(7, 10, 18);
+                        pdf.rect(0, 0, 210, 297, 'F');
+                    }
+
+                    pdf.setFontSize(16);
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setTextColor(255, 255, 255);
+                    pdf.text("English Vocabulary", 105, 12, { align: "center" });
+                    
+                    pdf.setFontSize(8);
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setTextColor(0, 122, 255);
+                    pdf.text("iOS 27 Glass Lexicon — Ultra Glass Cards", 105, 17, { align: "center" });
+                }
+
+                drawHeader();
+
+                for (let i = 0; i < data.length; i++) {
+                    const item = data[i];
+                    const enText = item.en || '';
+                    const uzText = item.uz || '';
+
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setFontSize(9);
+                    const enLines = pdf.splitTextToSize(enText, 78);
+
+                    pdf.setFont("helvetica", "normal");
+                    pdf.setFontSize(8.5);
+                    const uzLines = pdf.splitTextToSize(uzText, 82);
+
+                    const lineCount = Math.max(enLines.length, uzLines.length, 1);
+                    const cardH = Math.max(7.2, 3.2 + (lineCount * 3.8));
+
+                    if (currentY + cardH > pageHeight - bottomMargin) {
+                        pdf.addPage();
+                        currentY = 22;
+                        drawHeader();
+                    }
+
+                    pdf.setGState(new pdf.GState({ opacity: 0.15 }));
+                    pdf.setFillColor(255, 255, 255);
+                    pdf.roundedRect(cardX, currentY, cardWidth, cardH, 2, 2, 'F');
+
+                    pdf.setGState(new pdf.GState({ opacity: 0.25 }));
+                    pdf.setDrawColor(255, 255, 255);
+                    pdf.setLineWidth(0.25);
+                    pdf.roundedRect(cardX, currentY, cardWidth, cardH, 2, 2, 'D');
+
+                    pdf.setGState(new pdf.GState({ opacity: 1.0 }));
+
+                    const badgeX = cardX + 2.5;
+                    const badgeY = currentY + (cardH - 5) / 2;
+                    const badgeW = 7.5;
+                    const badgeH = 5;
+                    
+                    pdf.setFillColor(0, 122, 255);
+                    pdf.roundedRect(badgeX, badgeY, badgeW, badgeH, 1.5, 1.5, 'F');
+
+                    pdf.setFontSize(7);
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setTextColor(255, 255, 255);
+                    pdf.text(String(i + 1), badgeX + (badgeW / 2), badgeY + 3.6, { align: "center" });
+
+                    pdf.setFontSize(9);
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setTextColor(255, 255, 255);
+                    pdf.text(enLines, badgeX + badgeW + 3, currentY + 4.8);
+
+                    pdf.setFontSize(8.5);
+                    pdf.setFont("helvetica", "normal");
+                    pdf.setTextColor(226, 232, 240);
+                    pdf.text(uzLines, cardX + cardWidth - 4, currentY + 4.8, { align: "right" });
+
+                    currentY += cardH + 1.2;
+                }
+            }
+            
+            return pdf.output('blob');
+        }
+
+        async function downloadPDFLocally() {
+            try {
+                showNotification("PDF hujjat shakllantirilmoqda...", true);
+                const blob = await createPDFBlob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'English_Vocabulary.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showNotification("PDF muvaffaqiyatli saqlandi!", true);
+            } catch (err) {
+                showNotification("Xatolik: " + err.message);
+            }
+        }
+
+        async function sendToTelegram() {
+            const token = localStorage.getItem('tg_bot_token');
+            const chatId = localStorage.getItem('tg_chat_id');
+
+            if (!token || !chatId) {
+                showNotification("Iltimos, Telegram Sozlamalari bo'limida Bot Token hamda Chat ID ma'lumotlarini kiriting!");
+                openSettings();
+                return;
+            }
+
+            try {
+                showNotification("PDF shakllantirilib Telegramga uzatilmoqda...", true);
+                const blob = await createPDFBlob();
+
+                const formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('document', blob, 'English_Vocabulary.pdf');
+                formData.append('caption', '📚 Siz tayyorlagan English Vocabulary PDF fayli!');
+
+                const response = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (result.ok) {
+                    showNotification("PDF Telegramga muvaffaqiyatli yuborildi! 🚀", true);
+                } else {
+                    throw new Error(result.description || "Telegram API ga yuborishda xatolik.");
+                }
+            } catch (err) {
+                showNotification("Xatolik: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
